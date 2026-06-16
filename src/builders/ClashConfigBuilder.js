@@ -48,7 +48,7 @@ function getClashUdpValue(proxy, defaultEnabled = true) {
 }
 
 export class ClashConfigBuilder extends BaseConfigBuilder {
-    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, groupByCountry = false, enableClashUI = false, externalController, externalUiDownloadUrl, includeAutoSelect = true) {
+    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, groupByCountry = false, enableClashUI = false, externalController, externalUiDownloadUrl, includeAutoSelect = true, includeDns = true) {
         if (!baseConfig) {
             baseConfig = CLASH_CONFIG;
         }
@@ -60,6 +60,7 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
         this.enableClashUI = enableClashUI;
         this.externalController = externalController;
         this.externalUiDownloadUrl = externalUiDownloadUrl;
+        this.includeDns = includeDns;
     }
 
     /**
@@ -687,6 +688,10 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
             this.config['external-ui-name'] = uiName;
             this.config['external-ui-url'] = uiUrl;
             this.config['secret'] = secret;
+        }
+
+        if (!this.includeDns) {
+            delete this.config.dns;
         }
 
         return yaml.dump(this.config);

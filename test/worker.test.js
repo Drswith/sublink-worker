@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import yaml from 'js-yaml';
 import { createApp } from '../src/app/createApp.jsx';
 import { MemoryKVAdapter } from '../src/adapters/kv/memoryKv.js';
 
@@ -75,6 +76,19 @@ describe('Worker', () => {
         expect(res.headers.get('content-type')).toContain('text/yaml');
         const text = await res.text();
         expect(text).toContain('proxies:');
+    });
+
+    it('GET /clash can omit generated DNS config', async () => {
+        const app = createTestApp();
+        const config = 'ss://YWVzLTEyOC1nY206dGVzdA@example.com:443#TestSS';
+
+        const defaultRes = await app.request(`http://localhost/clash?config=${encodeURIComponent(config)}`);
+        expect(defaultRes.status).toBe(200);
+        expect(yaml.load(await defaultRes.text())).toHaveProperty('dns');
+
+        const noDnsRes = await app.request(`http://localhost/clash?config=${encodeURIComponent(config)}&include_clash_dns=false`);
+        expect(noDnsRes.status).toBe(200);
+        expect(yaml.load(await noDnsRes.text())).not.toHaveProperty('dns');
     });
 
     it('GET /clash rejects empty url-test proxy groups with a diagnostic error', async () => {
