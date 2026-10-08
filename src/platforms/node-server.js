@@ -4,6 +4,6 @@ import { startNodeHttpServer } from './nodeHttpServer.js';
 
 const runtime = createNodeRuntime(process.env);
 const app = createApp(runtime);
-const port = Number(process.env.PORT || 8787);
+const port = Number(process.env.PORT || 38471);
 
 startNodeHttpServer(app, { port, logger: runtime.logger });

@@ -46,6 +46,9 @@
 - **Docker**: `docker pull ghcr.io/drswith/sublink-worker:latest`
 - **Docker Compose**: `docker compose up -d` (includes Redis)
 
+Node.js and Docker deployments listen on port `38471` by default. Open
+`http://localhost:38471` after starting Compose.
+
 Compose uses this fork's GHCR image by default. Override `SUBLINK_WORKER_IMAGE`
 in `.env` to use another image or a specific version. GitHub Actions publishes
 images on pushes to `main`, `v*` tags, and manual workflow runs.

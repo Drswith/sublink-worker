@@ -3,7 +3,7 @@ services:
     image: ${SUBLINK_WORKER_IMAGE:-ghcr.io/drswith/sublink-worker:latest}
     pull_policy: always
     ports:
-      - "8787:8787"
+      - "38471:38471"
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379

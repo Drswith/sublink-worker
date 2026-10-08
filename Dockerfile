@@ -13,11 +13,11 @@ FROM node:22-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=8787
+ENV PORT=38471
 
 COPY --from=builder /app/dist ./dist
 COPY public ./public
 
-EXPOSE 8787
+EXPOSE 38471
 
 CMD ["node", "dist/node-server.cjs"]
