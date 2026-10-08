@@ -2,7 +2,7 @@ import http from 'http';
 import { Readable } from 'stream';
 import { pipeline } from 'stream/promises';
 
-export function startNodeHttpServer(app, { port = 8787, logger = console } = {}) {
+export function startNodeHttpServer(app, { port = 38471, logger = console } = {}) {
     const server = http.createServer(async (req, res) => {
         try {
             const request = toRequest(req);
