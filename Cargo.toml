@@ -1,0 +1,42 @@
+[package]
+name = "sublink-worker"
+version = "2.4.2"
+edition = "2024"
+rust-version = "1.90"
+description = "Proxy subscription converter for Sing-Box, Clash, Xray and Surge"
+license = "MIT"
+repository = "https://github.com/7Sageer/sublink-worker"
+publish = false
+
+[lib]
+name = "sublink"
+path = "src/lib.rs"
+
+[[bin]]
+name = "sublink-worker"
+path = "src/main.rs"
+
+[dependencies]
+askama = { version = "0.16", default-features = false, features = ["config", "derive", "std"] }
+bytes = "1"
+fastrand = "2"
+http-body-util = "0.1"
+hyper = { version = "1", features = ["server", "http1"] }
+hyper-util = { version = "0.1", features = ["tokio"] }
+indexmap = "2"
+redb = "4"
+reqwest = { version = "0.13", default-features = false, features = ["rustls-no-provider", "gzip", "brotli", "deflate", "system-proxy"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+ryu-js = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "signal", "sync", "io-util"] }
+url = "2"
+
+[dev-dependencies]
+flate2 = "1"
+regex = "1"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = true

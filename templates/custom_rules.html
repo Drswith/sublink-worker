@@ -1,0 +1,221 @@
+<div x-data="customRulesData()" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+      <i class="fas fa-stream text-gray-400"></i>{{ self.t("customRulesSection") }}
+    </h3>
+  </div>
+  <div class="flex flex-col sm:flex-row justify-between items-end sm:items-center mb-6 gap-4">
+    <p class="text-sm text-gray-500 dark:text-gray-400">{{ self.t("customRulesSectionTooltip") }}</p>
+    <div class="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+      <button type="button" x-on:click="mode = &#39;form&#39;" x-bind:class="{&#39;bg-white dark:bg-gray-600 text-primary-600 dark:text-primary-400 shadow-sm&#39;: mode === &#39;form&#39;, &#39;text-gray-500 dark:text-gray-400&#39;: mode !== &#39;form&#39;}" class="px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2">
+        <i class="fas fa-list"></i>{{ self.t("customRulesForm") }}
+      </button>
+      <button type="button" x-on:click="mode = &#39;json&#39;" x-bind:class="{&#39;bg-white dark:bg-gray-600 text-primary-600 dark:text-primary-400 shadow-sm&#39;: mode === &#39;json&#39;, &#39;text-gray-500 dark:text-gray-400&#39;: mode !== &#39;json&#39;}" class="px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2">
+        <i class="fas fa-code"></i>{{ self.t("customRulesJSON") }}
+      </button>
+    </div>
+  </div>
+  <div x-show="mode === &#39;form&#39;" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100">
+    <template x-if="rules.length === 0">
+      <div class="text-center py-12 bg-gray-50 dark:bg-gray-700/30 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+        <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+          <i class="fas fa-plus text-2xl"></i>
+        </div>
+        <p class="text-gray-500 dark:text-gray-400 mb-4">{{ self.t("noCustomRulesForm") }}</p>
+        <button type="button" x-on:click="addRule()" class="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors duration-200 font-medium">{{ self.t("addCustomRule") }}</button>
+      </div>
+    </template>
+    <div class="space-y-4">
+      <template x-for="(rule, index) in rules" x-bind:key="index">
+        <div x-data="{ show: false }" x-init="$nextTick(() =&gt; show = true)" x-show="show" class="bg-gray-50 dark:bg-gray-700/30 rounded-xl p-4 border border-gray-200 dark:border-gray-700 transition-all duration-200 hover:border-primary-200 dark:hover:border-primary-900/50" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 scale-100" x-transition:leave-end="opacity-0 translate-y-2 scale-95" x-on:custom-rules-clear.window="show = false">
+          <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+              <span class="w-6 h-6 rounded bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center text-xs" x-text="index + 1"></span>{{ self.t("customRule") }}
+            </h3>
+            <button type="button" x-on:click="show = false; setTimeout(() =&gt; removeRule(index), 200)" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="col-span-1 md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ self.t("customRuleOutboundName") }}</label>
+              <input type="text" x-model="rule.name" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200" placeholder="e.g., MyRule"/>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ self.t("customRuleDomainSuffix") }}</label>
+              <input type="text" x-model="rule.domain_suffix" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200" placeholder="{{ self.t("customRuleDomainSuffixPlaceholder") }}"/>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ self.t("customRuleDomainKeyword") }}</label>
+              <input type="text" x-model="rule.domain_keyword" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200" placeholder="{{ self.t("customRuleDomainKeywordPlaceholder") }}"/>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">{{ self.t("customRuleSrcIPCIDR") }}
+                <i class="fas fa-info-circle text-gray-400 hover:text-primary-500 cursor-help" title="{{ self.t("customRuleSrcIPCIDRTooltip") }}"></i>
+              </label>
+              <input type="text" x-model="rule.src_ip_cidr" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200" placeholder="{{ self.t("customRuleSrcIPCIDRPlaceholder") }}"/>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ self.t("customRuleIPCIDR") }}</label>
+              <input type="text" x-model="rule.ip_cidr" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200" placeholder="{{ self.t("customRuleIPCIDRPlaceholder") }}"/>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">{{ self.t("customRuleProtocol") }}
+                <i class="fas fa-info-circle text-gray-400 hover:text-primary-500 cursor-help" title="{{ self.t("customRuleProtocolTooltip") }}"></i>
+              </label>
+              <input type="text" x-model="rule.protocol" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200" placeholder="{{ self.t("customRuleProtocolPlaceholder") }}"/>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">{{ self.t("customRuleGeoSite") }}
+                <i class="fas fa-info-circle text-gray-400 hover:text-primary-500 cursor-help" title="{{ self.t("customRuleGeoSiteTooltip") }}"></i>
+              </label>
+              <input type="text" x-model="rule.site" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200" placeholder="{{ self.t("customRuleGeoSitePlaceholder") }}"/>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">{{ self.t("customRuleGeoIP") }}
+                <i class="fas fa-info-circle text-gray-400 hover:text-primary-500 cursor-help" title="{{ self.t("customRuleGeoIPTooltip") }}"></i>
+              </label>
+              <input type="text" x-model="rule.ip" class="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200" placeholder="{{ self.t("customRuleGeoIPPlaceholder") }}"/>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+    <div class="mt-6 flex flex-wrap gap-3">
+      <button type="button" x-on:click="addRule()" class="px-4 py-2 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-lg hover:bg-primary-100 dark:hover:bg-primary-900/40 transition-colors duration-200 font-medium flex items-center gap-2">
+        <i class="fas fa-plus"></i>{{ self.t("addCustomRule") }}
+      </button>
+      <button type="button" x-on:click="clearAll()" x-show="rules.length &gt; 0" class="px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors duration-200 font-medium flex items-center gap-2">
+        <i class="fas fa-trash"></i>{{ self.t("clearAll") }}
+      </button>
+    </div>
+  </div>
+  <div x-show="mode === &#39;json&#39;" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100">
+    <div class="space-y-2 group">
+      <div class="flex items-center justify-end mb-2">
+        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button type="button" title="{{ self.t("paste") }}" class="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded transition-colors flex items-center gap-1 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 dark:hover:text-primary-400" x-on:click="navigator.clipboard.readText().then(text =&gt; jsonContent = text).catch(() =&gt; {})">
+            <i class="fas fa-paste"></i>
+            <span class="hidden sm:inline">{{ self.t("paste") }}</span>
+          </button>
+          <button type="button" title="{{ self.t("clear") }}" class="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded transition-colors flex items-center gap-1 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400" x-on:click="jsonContent = &#39;&#39;" x-show="jsonContent">
+            <i class="fas fa-times"></i>
+            <span class="hidden sm:inline">{{ self.t("clear") }}</span>
+          </button>
+        </div>
+      </div>
+      <div class="relative">
+        <textarea id="customRulesJson" name="customRulesJson" placeholder="[{&quot;name&quot;: &quot;MyRule&quot;, &quot;src_ip_cidr&quot;: &quot;192.168.1.13/32&quot;, &quot;domain_suffix&quot;: &quot;example.com&quot;, &quot;outbound&quot;: &quot;Proxy&quot;}]" class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 resize-y placeholder-gray-400 dark:placeholder-gray-500 font-mono text-sm bg-gray-50 dark:bg-gray-900 min-h-[16rem]" x-model="jsonContent"></textarea>
+        <div class="absolute bottom-4 right-4 flex gap-2">
+          <button type="button" title="{{ self.t("validateJSON") }}" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-1" x-on:click="validateJson()">
+            <span class="">{{ self.t("validateJSON") }}</span>
+          </button>
+        </div>
+      </div>
+      <div class="mt-2 text-red-500 text-sm flex items-center gap-1" x-show="jsonError">
+        <i class="fas fa-exclamation-circle"></i>
+        <span x-text="jsonError"></span>
+      </div>
+      <div class="mt-2 text-green-500 text-sm flex items-center gap-1" x-show="jsonValid">
+        <i class="fas fa-check-circle"></i>
+        <span>{{ self.t("allJSONValid") }}</span>
+      </div>
+    </div>
+  </div>
+  <input type="hidden" name="customRules" x-bind:value="JSON.stringify(rules)"/>
+  <script>
+        function customRulesData() {
+          return {
+            mode: 'form',
+            rules: [],
+            jsonContent: '[]',
+            jsonError: null,
+            jsonValid: false,
+            
+            init() {
+              // Watch for changes in rules to update JSON content
+              this.$watch('rules', (value) => {
+                if (this.mode === 'form') {
+                  this.jsonContent = JSON.stringify(value, null, 2);
+                }
+              });
+
+              // Watch for changes in JSON content to update rules
+              this.$watch('jsonContent', (value) => {
+                if (this.mode === 'json') {
+                  try {
+                    const parsed = JSON.parse(value);
+                    if (Array.isArray(parsed)) {
+                      this.rules = parsed;
+                      this.jsonError = null;
+                      this.jsonValid = true;
+                      setTimeout(() => this.jsonValid = false, 3000);
+                    } else {
+                      this.jsonError = '{{ self.t("mustBeArray")|safe }}';
+                    }
+                  } catch (e) {
+                    this.jsonError = e.message;
+                  }
+                }
+              });
+
+              // Listen for custom event to restore rules from URL parsing
+              window.addEventListener('restore-custom-rules', (event) => {
+                if (event.detail && Array.isArray(event.detail.rules)) {
+                  this.rules = event.detail.rules;
+                  this.jsonContent = JSON.stringify(event.detail.rules, null, 2);
+                  this.mode = 'json'; // Switch to JSON mode to show imported rules
+                }
+              });
+            },
+            
+            addRule() {
+              this.rules.push({
+                name: '',
+                domain_suffix: '',
+                domain_keyword: '',
+                src_ip_cidr: '',
+                ip_cidr: '',
+                protocol: '',
+                site: '',
+                ip: '',
+                outbound: '' // Will be set to name by default in backend or needs explicit field? 
+                             // In original logic, outbound name IS the rule name for custom rules.
+              });
+            },
+            
+            removeRule(index) {
+              this.rules.splice(index, 1);
+            },
+            
+            clearAll() {
+              if (!confirm('{{ self.t("confirmClearAllRules")|safe }}')) {
+                return;
+              }
+              
+              this.$dispatch('custom-rules-clear');
+              setTimeout(() => {
+                this.rules = [];
+                this.jsonContent = '[]';
+              }, 200);
+            },
+            
+            validateJson() {
+              try {
+                const parsed = JSON.parse(this.jsonContent);
+                if (Array.isArray(parsed)) {
+                  this.rules = parsed;
+                  this.jsonError = null;
+                  this.jsonValid = true;
+                  setTimeout(() => this.jsonValid = false, 3000);
+                } else {
+                  this.jsonError = '{{ self.t("mustBeArray")|safe }}';
+                }
+              } catch (e) {
+                this.jsonError = e.message;
+              }
+            }
+          }
+        }
+      </script>
+</div>

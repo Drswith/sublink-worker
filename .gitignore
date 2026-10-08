@@ -184,3 +184,7 @@ AGENTS.local.md
 
 # Local upstream source references
 .upstreams/
+
+# Rust build output and local database
+/target/
+/data/

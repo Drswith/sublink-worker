@@ -1,0 +1,8 @@
+[general]
+dirs = ["templates"]
+
+# Hono's escaping (`&quot;`, `&#39;`) instead of askama's, so pages stay
+# byte-identical to the original JSX output.
+[[escaper]]
+path = "crate::pages::HonoHtml"
+extensions = ["html"]
