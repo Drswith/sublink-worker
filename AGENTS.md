@@ -10,67 +10,45 @@
 
 ## 项目概览
 
-Sublink Worker 是多平台代理订阅转换器：将各类协议（ShadowSocks/VMess/VLESS/Hysteria2/Trojan/TUIC）转为客户端配置（Sing-Box/Clash/Xray/Surge）。同一份代码跑在 Cloudflare Workers / Node.js / Vercel / Docker 上。技术栈：Hono（Web/JSX SSR）+ Vitest + Wrangler + esbuild + ioredis。
+Sublink Worker 是代理订阅转换器：将 ShadowSocks/VMess/VLESS/Hysteria2/Trojan/TUIC/AnyTLS 节点或订阅转为 Sing-Box/Clash/Xray/Surge 配置。单个 Rust 二进制：hyper + tokio（HTTP）、reqwest + rustls（抓取订阅）、redb（内嵌 KV）、askama（首页 SSR），以 `scratch` Docker 镜像发布。
+
+行为与重写前的 Node.js（Hono）实现逐字节对齐，差异清单见 `docs/rust-rewrite.md`。
 
 ## 常用命令
 
-- `npm run dev` — Wrangler 本地开发（Cloudflare Workers 入口）
-- `npm run dev:node` — esbuild bundle + 启动 Node.js server
-- `npm test` — Vitest（基于 `@cloudflare/vitest-pool-workers`，依赖 `wrangler.toml`）
-- `npx vitest test/<file>.test.js` — 跑单个测试文件
-- `npm run build` — Vercel 构建（输出到 `dist/vercel/`）
-- `npm run deploy` — `setup-kv` + `wrangler deploy`
+- `cargo run` — 本地启动（默认端口 38471，数据写入 `data/sublink.redb`；`DB_PATH=:memory:` 不落盘）
+- `cargo test` — 全部测试；`cargo test --test unit <过滤词>` 跑单个模块
+- `GOLDEN_FILTER=<用例名片段> cargo test --test golden` — 只比对部分 golden 用例
+- `cargo clippy --all-targets -- -D warnings`、`cargo fmt`（`rustfmt.toml`，行宽 120）
+- `docker build -t sublink-worker:local .`
 
-无 ESLint/Prettier/Biome 配置，未启用自动格式化。
+环境变量：`PORT`、`DB_PATH`、`CONFIG_TTL_SECONDS`（`0` 永不过期）、`SHORT_LINK_TTL_SECONDS`；订阅抓取遵循 `HTTPS_PROXY`/`NO_PROXY`。
 
-## 多运行时架构
+## 代码结构
 
-入口分平台：`src/worker.jsx`（Cloudflare）、`src/platforms/node-server.js`（Node/Docker）、`api/index.js`（Vercel）。三者都通过 `createApp(runtime)`（`src/app/createApp.jsx`）创建同一个 Hono app。
-
-- `src/runtime/{cloudflare,node,vercel}.js` 提供平台适配
-- `src/runtime/runtimeConfig.js` 规范化 KV、资源获取、日志、环境变量默认值
-
-新增运行时：在 `src/runtime/` 加 adapter，按需在 `src/adapters/kv/` 加 KV 实现，按需在 `src/platforms/` 加入口。
-
-## KV 存储抽象
-
-统一接口：`get(key)`、`put(key, value, options)`、`delete(key)`。实现：`CloudflareKVAdapter`、`RedisKVAdapter`（ioredis）、`UpstashKVAdapter`（REST）、`MemoryKVAdapter`。
-
-- 服务层：`ShortLinkService`（短链）、`ConfigStorageService`（base config 存储，默认 30 天 TTL）
-- Node/Vercel 优先级：Redis > Upstash/Vercel KV > 内存兜底；`DISABLE_MEMORY_KV=true` 关闭兜底
-- Cloudflare 用 `wrangler.toml` 的 `SUBLINK_KV` 与 `ASSETS` binding
-
-环境变量：`REDIS_URL` / `REDIS_HOST`+`REDIS_PORT` / `REDIS_USERNAME` / `REDIS_PASSWORD` / `REDIS_TLS` / `REDIS_KEY_PREFIX`、`KV_REST_API_URL`+`KV_REST_API_TOKEN`、`CONFIG_TTL_SECONDS`、`SHORT_LINK_TTL_SECONDS`、`STATIC_DIR`、`PORT`。
-
-## 协议解析与配置构建
-
-**ProxyParser**（`src/parsers/ProxyParser.js`）按 URL scheme 分发到 `src/parsers/protocols/<protocol>Parser.js`。HTTP(S) 订阅走 `httpSubscriptionFetcher` → `subscriptionContentParser`，自动识别 Sing-Box JSON / Clash YAML / Surge INI / Base64 列表。
-
-返回值约定：
-- 协议 parser：`{ tag, type, ...protocolFields }`
-- 订阅级 parser：`{ type: 'yamlConfig'|'singboxConfig'|'surgeConfig', config, proxies }`
-
-**新增协议**：在 `src/parsers/protocols/` 加 parser，并在 `ProxyParser.js` 的 `protocolParsers` map 注册。
-
-**Builder 模式**：`SingboxConfigBuilder` / `ClashConfigBuilder` / `SurgeConfigBuilder` 都继承 `BaseConfigBuilder`。子类必须实现：`getProxies()`、`getProxyName(proxy)`、`convertProxy(proxy)`、`addProxyToConfig(proxy)`、`addAutoSelectGroup(list)`、`addNodeSelectGroup(list)`、`addOutboundGroups(outbounds, list)`、`addCustomRuleGroups(list)`、`addFallBackGroup(list)`、`addCountryGroups()`、`formatConfig()`。
-
-**Config Override**：订阅含完整配置时，`applyConfigOverrides()` 合并非代理字段到 base config；blacklist（proxies、rules、rule-providers）永远不被覆盖；Clash `proxy-groups` 可被订阅覆盖以保留用户分组结构。
-
-国家分组逻辑在 `src/utils.js#groupProxiesByCountry`。
-
-## 测试
-
-Vitest + `@cloudflare/vitest-pool-workers`，配置 `vitest.config.js` 指向 `wrangler.toml`。测试文件在 `test/`。
-
-- 写测试时用 `MemoryKVAdapter` 做 KV，用 `createApp(runtime)` 拿到可测的 Hono app
-- 覆盖：路由、各 builder、各 parser（含 YAML 订阅）、country grouping、selectedRules 向后兼容
+- `src/main.rs` 启动与信号处理；`src/settings.rs` 解析环境变量；`src/server.rs` 把 hyper 请求转成原 Node 入口看到的 URL/请求头
+- `src/app.rs` 全部路由；`src/hono.rs` 复刻 Hono 的查询参数解析、路径解码、默认 Content-Type
+- `src/storage.rs` redb KV（TTL 惰性过期 + 定期 sweep，可注入时钟）；`src/services.rs` 短链与基础配置存储
+- `src/js/` JS 语义层：`Value`（Arc 写时复制，模拟引用身份以复现 YAML 锚点）、V8 风格 JSON、数字/URI/Base64
+- `src/yaml/` js-yaml 4 兼容的 `load`/`dump`
+- `src/parsers/` 协议解析（`protocols.rs`）、订阅抓取与格式识别（`subscription.rs`、`content.rs`）、Clash/Surge 代理转换
+- `src/builders/` `ConfigBuilder` trait + `Core`（原 `BaseConfigBuilder` 字段与模板方法）；`singbox.rs`/`clash.rs`/`surge.rs` 各自实现
+- `src/config/` 规则定义、规则生成、subconverter；基础配置在 `assets/base/*.json`，翻译在 `assets/i18n.json`
+- `src/pages.rs` + `templates/` 首页 SSR；`assets/web/` 前端脚本与 favicon
 
 ## 关键约定
 
-- `.jsx` 文件用 Hono JSX runtime，**不是 React**
-- Base64 输入用 `tryDecodeSubscriptionLines()` 处理（同时支持原文和 Base64）
-- 错误用 `ServiceError` 子类（`InvalidPayloadError`、`MissingDependencyError`），返回干净响应
-- i18n：zh-CN / en-US / fa-IR，文件在 `src/i18n/`
+- 行为对齐优先：改动必须通过 golden/pages 对照测试；有意改变输出时同步更新 fixture，并在 `docs/rust-rewrite.md` 记录
+- 业务逻辑统一使用 `js::Value` 并保留 JS 语义（真值、ToString、属性访问报错文本）——这些文本会直接出现在 500 响应里
+- 新增协议：在 `src/parsers/protocols.rs` 加 parser，并在 `src/parsers/mod.rs` 的 scheme 分发中注册
+- 模板缩进只为可读，渲染后按 esbuild 的 JSX 规则折叠空白；插值使用 Hono 的转义（`&quot;`、`&#39;`）
+- 测试中的网络请求一律走 `tests/common` 的 `MockFetcher`，KV 用 `Store::in_memory()`
+- i18n：zh-CN / en-US / fa / ru，在 `assets/i18n.json`
+
+## 测试
+
+- `tests/unit/`：原 vitest 用例逐文件移植（一个模块对应一个原测试文件）
+- `tests/golden.rs`、`tests/pages.rs`、`tests/js_core.rs`、`tests/yaml_compat.rs`：与 Node 实现录制结果逐字节对照；fixture 生成方法见 `tests/fixtures/reference/README.md`
 
 ## 本地工作流
 

@@ -1,23 +1,26 @@
-FROM node:22-alpine AS builder
-WORKDIR /app
+# syntax=docker/dockerfile:1
 
-COPY package*.json ./
-RUN npm ci
-
+# rust:alpine targets musl, so the binary is fully static and needs no libc
+# in the runtime image.
+FROM rust:1-alpine AS builder
+WORKDIR /src
+COPY Cargo.toml Cargo.lock askama.toml ./
 COPY src ./src
-COPY public ./public
+COPY templates ./templates
+COPY assets ./assets
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/src/target \
+    cargo build --release --locked \
+    && cp target/release/sublink-worker /sublink-worker \
+    && mkdir /data
 
-RUN npm run build:node
-
-FROM node:22-alpine AS runner
-WORKDIR /app
-
-ENV NODE_ENV=production
-ENV PORT=38471
-
-COPY --from=builder /app/dist ./dist
-COPY public ./public
-
+FROM scratch
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY --from=builder /sublink-worker /sublink-worker
+COPY --from=builder --chown=65534:65534 /data /data
+ENV PORT=38471 \
+    DB_PATH=/data/sublink.redb
+VOLUME /data
 EXPOSE 38471
-
-CMD ["node", "dist/node-server.cjs"]
+USER 65534:65534
+ENTRYPOINT ["/sublink-worker"]

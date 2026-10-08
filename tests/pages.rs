@@ -33,8 +33,10 @@ async fn home_page_matches_node_rendering() {
         let res = app.handle(&req).await;
         assert_eq!(res.status, 200);
         assert_eq!(res.header("content-type"), case.get("contentType").as_str());
-        let got = mask(&res.text(), year);
-        let want = case.get("html").as_str().unwrap();
+        // The fixture was rendered at v2.4.2; later releases only change the version text.
+        let got = mask(&res.text(), year).replace(sublink::i18n::APP_VERSION, "{{version}}");
+        let want = case.get("html").as_str().unwrap().replace("2.4.2", "{{version}}");
+        let want = want.as_str();
         if got != want {
             let dir = std::path::Path::new(env!("CARGO_TARGET_TMPDIR"));
             std::fs::write(dir.join("page-got.html"), &got).unwrap();

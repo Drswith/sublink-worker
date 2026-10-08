@@ -1,25 +1,16 @@
 <div align="center">
-  <img src="public/favicon.png" alt="Sublink Worker" width="120" height="120"/>
+  <img src="assets/web/favicon.png" alt="Sublink Worker" width="120" height="120"/>
 
   <h1><b>Sublink Worker</b></h1>
   <h5><i>One Worker, All Subscriptions</i></h5>
 
-  <p><b>A lightweight subscription converter and manager for proxy protocols, deployable on Cloudflare Workers, Vercel, Node.js, or Docker.</b></p>
+  <p><b>A lightweight subscription converter and manager for proxy protocols, shipped as a single Rust binary (or a ~9 MB Docker image).</b></p>
 
   <a href="https://trendshift.io/repositories/12291" target="_blank">
     <img src="https://trendshift.io/api/badge/repositories/12291" alt="7Sageer%2Fsublink-worker | Trendshift" width="250" height="55"/>
   </a>
 
   <br>
-
-<p style="display: flex; align-items: center; gap: 10px;">
-  <a href="https://deploy.workers.cloudflare.com/?url=https://github.com/7Sageer/sublink-worker">
-    <img src="https://deploy.workers.cloudflare.com/button" alt="Deploy to Cloudflare Workers" style="height: 32px;"/>
-  </a>
-  <a href="https://vercel.com/new/clone?repository-url=https://github.com/7Sageer/sublink-worker&env=KV_REST_API_URL,KV_REST_API_TOKEN&envDescription=Vercel%20KV%20credentials%20for%20data%20storage&envLink=https://vercel.com/docs/storage/vercel-kv">
-    <img src="https://vercel.com/button" alt="Deploy to Vercel" style="height: 32px;"/>
-  </a>
-</p>
 
   <h3>📚 Documentation</h3>
   <p>
@@ -36,30 +27,53 @@
 
 ## 🚀 Quick Start
 
-### One-Click Deployment
-- Choose a "deploy" button above to click
-- That's it! See the [Document](https://sublink.works/guide/quick-start/) for more information.
+### Docker Compose (recommended)
 
-### Alternative Runtimes
-- **Node.js**: `npm run build:node && node dist/node-server.cjs`
-- **Vercel**: `vercel deploy` (configure KV in project settings)
-- **Docker**: `docker pull ghcr.io/drswith/sublink-worker:latest`
-- **Docker Compose**: `docker compose up -d` (includes Redis)
+```bash
+docker compose up -d
+```
 
-Node.js and Docker deployments listen on port `38471` by default. Open
-`http://localhost:38471` after starting Compose.
+Open `http://localhost:38471`. Short links and saved configs live in the
+`sublink-data` volume, so they survive restarts and upgrades.
 
 Compose uses this fork's GHCR image by default. Override `SUBLINK_WORKER_IMAGE`
 in `.env` to use another image or a specific version. GitHub Actions publishes
-images on pushes to `main`, `v*` tags, and manual workflow runs.
+multi-arch images (amd64/arm64) on pushes to `main`, `v*` tags, and manual
+workflow runs.
 
-To build and run the current source locally:
+### Docker
+
+```bash
+docker run -d -p 38471:38471 -v sublink-data:/data ghcr.io/drswith/sublink-worker:latest
+```
+
+### From source
+
+```bash
+cargo build --release
+./target/release/sublink-worker
+```
+
+To build and run the current source as an image:
 
 ```bash
 docker build -t sublink-worker:local .
-docker compose pull redis
 SUBLINK_WORKER_IMAGE=sublink-worker:local docker compose up -d --pull never
 ```
+
+### Configuration
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `PORT` | `38471` | HTTP listen port |
+| `DB_PATH` | `data/sublink.redb` (`/data/sublink.redb` in Docker) | Embedded database file; `:memory:` keeps data in RAM only |
+| `CONFIG_TTL_SECONDS` | `2592000` (30 days) | Lifetime of saved base configs; `0` keeps them forever |
+| `SHORT_LINK_TTL_SECONDS` | unset (never expire) | Lifetime of short links |
+
+Outbound subscription downloads honor `HTTPS_PROXY` / `HTTP_PROXY` / `NO_PROXY`.
+
+Upgrading from the Node.js version? See [docs/rust-rewrite.md](docs/rust-rewrite.md):
+Redis is no longer used and existing short links are not migrated.
 
 ## ✨ Features
 
@@ -76,7 +90,7 @@ Sing-Box • Clash • Xray/V2Ray • Surge
 
 ### Core Capabilities
 - Import subscriptions from multiple sources
-- Generate fixed/random short links (KV-based)
+- Generate fixed/random short links (stored in an embedded database, no Redis needed)
 - Light/Dark theme toggle
 - Flexible API for script automation
 - Multi-language support (Chinese, English, Persian, Russian)

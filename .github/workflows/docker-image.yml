@@ -10,9 +10,12 @@ on:
     paths:
       - 'Dockerfile'
       - 'docker-compose.yml'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+      - 'askama.toml'
       - 'src/**'
-      - 'package.json'
-      - 'package-lock.json'
+      - 'templates/**'
+      - 'assets/**'
       - '.github/workflows/docker-image.yml'
   workflow_dispatch:
 
@@ -64,3 +67,5 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

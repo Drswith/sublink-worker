@@ -35,14 +35,11 @@ jobs:
 
             ### 🚀 Quick Start
             ```bash
-            # Cloudflare Workers
-            npm install && npm run deploy
-
             # Docker
             docker compose up -d
 
-            # Node.js
-            npm run build:node && npm run dev:node
+            # From source
+            cargo build --release && ./target/release/sublink-worker
             ```
 
             ---

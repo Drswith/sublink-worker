@@ -1,8 +1,9 @@
-node_modules
-npm-debug.log
-dist
-.wrangler
 .git
-.gitignore
+.github
+target
+data
+node_modules
+tests
+*.md
 Dockerfile
-vercel.json
+docker-compose.yml

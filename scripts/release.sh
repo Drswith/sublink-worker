@@ -48,19 +48,16 @@ if git rev-parse "$VERSION" >/dev/null 2>&1; then
   exit 1
 fi
 
-# Update package.json version (remove 'v' prefix for npm)
-NPM_VERSION=${VERSION#v}
-echo -e "${YELLOW}→ Updating package.json version to $NPM_VERSION${NC}"
-npm version $NPM_VERSION --no-git-tag-version
-
-# Update src/constants.js version
-echo -e "${YELLOW}→ Updating src/constants.js version to $NPM_VERSION${NC}"
-sed -i.bak "s/export const APP_VERSION = '.*';/export const APP_VERSION = '$NPM_VERSION';/" src/constants.js
-rm -f src/constants.js.bak
+# Update the crate version (the app reads it from CARGO_PKG_VERSION)
+CRATE_VERSION=${VERSION#v}
+echo -e "${YELLOW}→ Updating Cargo.toml version to $CRATE_VERSION${NC}"
+sed -i.bak "s/^version = \".*\"/version = \"$CRATE_VERSION\"/" Cargo.toml
+rm -f Cargo.toml.bak
+cargo update --workspace --offline
 
 # Commit version bump
 echo -e "${YELLOW}→ Committing version bump${NC}"
-git add package.json package-lock.json src/constants.js
+git add Cargo.toml Cargo.lock
 git commit -m "chore: release $VERSION"
 
 # Create annotated tag

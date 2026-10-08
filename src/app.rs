@@ -19,7 +19,7 @@ use crate::storage::Store;
 use crate::utils::try_decode_subscription_lines;
 
 const DEFAULT_USER_AGENT: &str = "curl/7.74.0";
-static FAVICON: &[u8] = include_bytes!("../public/favicon.ico");
+static FAVICON: &[u8] = include_bytes!("../assets/web/favicon.ico");
 
 pub struct App {
     pub store: Store,
