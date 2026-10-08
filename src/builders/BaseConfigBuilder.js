@@ -1,3 +1,4 @@
+import { ServiceError } from '../services/errors.js';
 import { ProxyParser } from '../parsers/index.js';
 import { createStableProviderName, deepCopy, tryDecodeSubscriptionLines, decodeBase64 } from '../utils.js';
 import { createTranslator } from '../i18n/index.js';
@@ -93,6 +94,9 @@ export class BaseConfigBuilder {
 
                     try {
                         const fetchResult = await fetchSubscriptionWithFormat(trimmedUrl, this.userAgent);
+                        if (!fetchResult) {
+                            throw new ServiceError('Unable to fetch upstream subscription; check its URL and server connectivity', 502);
+                        }
                         if (fetchResult) {
                             const { content, format, url: originalUrl, subscriptionUserinfo } = fetchResult;
 
@@ -139,7 +143,8 @@ export class BaseConfigBuilder {
                             }
                         }
                     } catch (error) {
-                        console.error('Error processing HTTP subscription:', error);
+                        if (error instanceof ServiceError) throw error;
+                        throw new ServiceError('Unable to process upstream subscription', 502);
                     }
                     continue;
                 }

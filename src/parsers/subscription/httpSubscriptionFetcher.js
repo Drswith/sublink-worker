@@ -130,7 +130,8 @@ export async function fetchSubscription(url, userAgent) {
         }
         const response = await fetch(url, {
             method: 'GET',
-            headers: headers
+            headers: headers,
+            signal: AbortSignal.timeout(15000)
         });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -159,7 +160,8 @@ export async function fetchSubscriptionWithFormat(url, userAgent) {
         }
         const response = await fetch(url, {
             method: 'GET',
-            headers: headers
+            headers: headers,
+            signal: AbortSignal.timeout(15000)
         });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -172,7 +174,8 @@ export async function fetchSubscriptionWithFormat(url, userAgent) {
 
         return { content, format, url, subscriptionUserinfo };
     } catch (error) {
-        console.error('Error fetching subscription:', error);
+        // URLs and nested fetch errors may contain subscription credentials.
+        console.error('Error fetching subscription:', error.name, error.cause?.code || '');
         return null;
     }
 }
