@@ -43,8 +43,20 @@
 ### Alternative Runtimes
 - **Node.js**: `npm run build:node && node dist/node-server.cjs`
 - **Vercel**: `vercel deploy` (configure KV in project settings)
-- **Docker**: `docker pull ghcr.io/7sageer/sublink-worker:latest`
+- **Docker**: `docker pull ghcr.io/drswith/sublink-worker:latest`
 - **Docker Compose**: `docker compose up -d` (includes Redis)
+
+Compose uses this fork's GHCR image by default. Override `SUBLINK_WORKER_IMAGE`
+in `.env` to use another image or a specific version. GitHub Actions publishes
+images on pushes to `main`, `v*` tags, and manual workflow runs.
+
+To build and run the current source locally:
+
+```bash
+docker build -t sublink-worker:local .
+docker compose pull redis
+SUBLINK_WORKER_IMAGE=sublink-worker:local docker compose up -d --pull never
+```
 
 ## ✨ Features
 
