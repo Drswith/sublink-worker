@@ -1,0 +1,16 @@
+{
+  "name": "sublink-worker",
+  "install": "npm ci",
+  "terminals": [
+    {
+      "name": "node-server",
+      "command": "npm run dev:node"
+    }
+  ],
+  "ports": [
+    {
+      "name": "web server",
+      "port": 8787
+    }
+  ]
+}
