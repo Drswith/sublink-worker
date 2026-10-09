@@ -23,3 +23,25 @@ node gen_pages.mjs  <repo>/tests/fixtures/pages.json.gz
 node gen_jscore.mjs > <repo>/tests/fixtures/js_core.json
 node gen_yaml.mjs   > <repo>/tests/fixtures/yaml_cases.json
 ```
+
+## Browser UI comparison
+
+`ui_compare.mjs` drives the same UI flows (every language, conversion with
+presets and custom rules, short links, base-config validation/saving, custom
+rule JSON mode, link pasting, clear-all, dark mode, update toast) in Chromium
+against both apps and diffs DOM, visible text, full-page screenshots (pixel by
+pixel), dialogs, `localStorage` and the responses of the generated links. CDN
+assets are served from the same npm package versions so both runs see
+identical inputs.
+
+```sh
+npm i playwright-core@1.56 alpinejs@3.13.10 js-yaml@4.1.0 qrcode-generator@1.4.4 @fortawesome/fontawesome-free@6.4.0 pngjs
+PORT=38580 node dist/node-server.cjs &          # original, from the c08b647 worktree
+node ui_compare.mjs capture http://127.0.0.1:38580 node
+# stop it, then on the same port:
+PORT=38580 DB_PATH=:memory: <repo>/target/release/sublink-worker &
+node ui_compare.mjs capture http://127.0.0.1:38580 rust
+node ui_compare.mjs diff
+```
+
+Set `CHROMIUM_PATH` when Playwright cannot locate its own Chromium build.

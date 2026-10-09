@@ -50,6 +50,7 @@
   sing-box 版本分档、短链、配置保存及各种错误路径。
 - `tests/pages.rs`：首页 HTML 在 4 种语言及多种 `lang`/`Accept-Language` 组合下与原
   JSX 渲染结果逐字节一致。
+- 浏览器端：在 Chromium 中对原版和 Rust 版执行同一组 UI 操作（4 种语言、转换、短链、基础配置、自定义规则、粘贴回填、清空、深色模式、更新提示），46 项观测（DOM、可见文本、整页截图逐像素、弹窗、localStorage、生成链接的响应）全部一致。
 - `tests/js_core.rs`、`tests/yaml_compat.rs`：JS 数字/URI/Base64 语义与 js-yaml 4
   的读写结果与 Node 逐项对照。
 
