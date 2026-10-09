@@ -52,6 +52,9 @@
 - 浏览器端：在 Chromium 中对原版和 Rust 版执行同一组 UI 操作（4 种语言、转换、短链、基础配置、自定义规则、粘贴回填、清空、深色模式、更新提示），46 项观测（DOM、可见文本、整页截图逐像素、弹窗、localStorage、生成链接的响应）全部一致。
 - `tests/js_core.rs`、`tests/yaml_compat.rs`：JS 数字/URI/Base64 语义与 js-yaml 4
   的读写结果与 Node 逐项对照。
+- `tests/e2e/clients.py`：用真实客户端验证生成的配置可用——本地起各协议的 sing-box 服务端，
+  让 sing-box 1.11–1.14 与 mihomo 加载生成的配置并实际转发流量，只有服务端日志证明请求经过代理才算通过。
+  原版与 Rust 版在 71 个用例上的通过/失败结果完全相同，失败项见下节。
 
 录制脚本与重新生成方法见 `tests/fixtures/reference/README.md`。
 
@@ -64,6 +67,10 @@
 - 协议解析抛出的异常会让整个请求返回 500 `Error: <JS 错误信息>`，错误文本与
   V8 完全一致（例如 `Cannot read properties of undefined (reading 'x')`）。
 - 短链与保存的配置共用同一个键空间（`/shorten-v2?shortCode=clash_xxx` 可以覆盖配置）。
+- 真实客户端无法运行的几类输出（详见 `tests/e2e/README.md`）：sing-box 1.14 分档的规则集下载
+  `detour` 指向无参数的 `DIRECT` 出站，1.14 启动即报错；1.11 分档仍输出 anytls 出站；
+  Clash 订阅转 sing-box 时带入 Clash 的 `dns` 段；sing-box 订阅转 sing-box 时输出非官方的
+  `providers` 字段，转 Clash 时把 `ntp`/`inbounds`/`route` 等 sing-box 专有段原样带入（mihomo 拒绝 `ntp.interval: 30m`）。
 - Hono 的查询参数解析细节（`+` 视为空格、首个同名参数生效、编码键名的回退解析）、
   `c.text()` 快速路径的 `text/plain;charset=UTF-8` 与常规路径的
   `text/plain; charset=UTF-8` 差异等，均按原样实现。
