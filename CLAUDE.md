@@ -13,13 +13,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概览
 
-Sublink Worker 是代理订阅转换器：将 ShadowSocks/VMess/VLESS/Hysteria2/Trojan/TUIC/AnyTLS 节点或订阅转为 Sing-Box/Clash/Xray/Surge 配置。单个 Rust 二进制：hyper + tokio（HTTP）、reqwest + rustls（抓取订阅）、redb（内嵌 KV）、askama（首页 SSR），以 `scratch` Docker 镜像发布。
+Sublink Worker 是代理订阅转换器：将 ShadowSocks/VMess/VLESS/Hysteria2/Trojan/TUIC/AnyTLS 节点或订阅转为 Sing-Box/Clash/Xray/Surge 配置。单个 Rust 二进制：hyper + tokio（HTTP）、reqwest + rustls（抓取订阅）、内存 HashMap + 追加日志（KV 持久化）、askama（首页 SSR），以 `scratch` Docker 镜像发布。
 
 行为与重写前的 Node.js（Hono）实现逐字节对齐，差异清单见 `docs/rust-rewrite.md`。
 
 ## 常用命令
 
-- `cargo run` — 本地启动（默认端口 38471，数据写入 `data/sublink.redb`；`DB_PATH=:memory:` 不落盘）
+- `cargo run` — 本地启动（默认端口 38471，数据写入 `data/sublink.aof`；`DB_PATH=:memory:` 不落盘）
 - `cargo test` — 全部测试；`cargo test --test unit <过滤词>` 跑单个模块
 - `GOLDEN_FILTER=<用例名片段> cargo test --test golden` — 只比对部分 golden 用例
 - `cargo clippy --all-targets -- -D warnings`、`cargo fmt`（`rustfmt.toml`，行宽 120）
@@ -31,7 +31,7 @@ Sublink Worker 是代理订阅转换器：将 ShadowSocks/VMess/VLESS/Hysteria2/
 
 - `src/main.rs` 启动与信号处理；`src/settings.rs` 解析环境变量；`src/server.rs` 把 hyper 请求转成原 Node 入口看到的 URL/请求头
 - `src/app.rs` 全部路由；`src/hono.rs` 复刻 Hono 的查询参数解析、路径解码、默认 Content-Type
-- `src/storage.rs` redb KV（TTL 惰性过期 + 定期 sweep，可注入时钟）；`src/services.rs` 短链与基础配置存储
+- `src/storage.rs` 内存 KV + 追加日志（写入先落盘再生效，启动重放，定期 sweep 并在废弃记录过半时原子压缩；可注入时钟）；`src/services.rs` 短链与基础配置存储
 - `src/js/` JS 语义层：`Value`（Arc 写时复制，模拟引用身份以复现 YAML 锚点）、V8 风格 JSON、数字/URI/Base64
 - `src/yaml/` js-yaml 4 兼容的 `load`/`dump`
 - `src/parsers/` 协议解析（`protocols.rs`）、订阅抓取与格式识别（`subscription.rs`、`content.rs`）、Clash/Surge 代理转换

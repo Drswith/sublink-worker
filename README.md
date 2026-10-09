@@ -66,7 +66,7 @@ SUBLINK_WORKER_IMAGE=sublink-worker:local docker compose up -d --pull never
 | Variable | Default | Description |
 | --- | --- | --- |
 | `PORT` | `38471` | HTTP listen port |
-| `DB_PATH` | `data/sublink.redb` (`/data/sublink.redb` in Docker) | Embedded database file; `:memory:` keeps data in RAM only |
+| `DB_PATH` | `data/sublink.aof` (`/data/sublink.aof` in Docker) | Append-only log that persists the in-memory store; `:memory:` keeps data in RAM only |
 | `CONFIG_TTL_SECONDS` | `2592000` (30 days) | Lifetime of saved base configs; `0` keeps them forever |
 | `SHORT_LINK_TTL_SECONDS` | unset (never expire) | Lifetime of short links |
 
@@ -90,7 +90,7 @@ Sing-Box • Clash • Xray/V2Ray • Surge
 
 ### Core Capabilities
 - Import subscriptions from multiple sources
-- Generate fixed/random short links (stored in an embedded database, no Redis needed)
+- Generate fixed/random short links (kept in memory and persisted to an append-only log, no Redis needed)
 - Light/Dark theme toggle
 - Flexible API for script automation
 - Multi-language support (Chinese, English, Persian, Russian)

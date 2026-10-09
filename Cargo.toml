@@ -24,7 +24,6 @@ http-body-util = "0.1"
 hyper = { version = "1", features = ["server", "http1"] }
 hyper-util = { version = "0.1", features = ["tokio"] }
 indexmap = "2"
-redb = "4"
 reqwest = { version = "0.13", default-features = false, features = ["rustls-no-provider", "gzip", "brotli", "deflate", "system-proxy"] }
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
 ryu-js = "1"

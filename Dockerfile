@@ -19,7 +19,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certifi
 COPY --from=builder /sublink-worker /sublink-worker
 COPY --from=builder --chown=65534:65534 /data /data
 ENV PORT=38471 \
-    DB_PATH=/data/sublink.redb
+    DB_PATH=/data/sublink.aof
 VOLUME /data
 EXPOSE 38471
 USER 65534:65534

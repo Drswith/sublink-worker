@@ -8,7 +8,7 @@
 | 项目 | Node.js 版本 | Rust 版本 |
 | --- | --- | --- |
 | 运行方式 | Cloudflare Workers / Vercel / Node.js / Docker | 单二进制 / Docker（`scratch` 镜像，约 9 MB） |
-| 存储 | Cloudflare KV / Redis / Upstash / 进程内存 | 内嵌 [redb](https://github.com/cberner/redb) 文件（`DB_PATH`） |
+| 存储 | Cloudflare KV / Redis / Upstash / 进程内存 | 进程内 HashMap + 追加日志文件（`DB_PATH`） |
 | 静态资源 | `STATIC_DIR` 目录 | favicon 编译进二进制 |
 | 常驻内存（同等负载实测 RSS） | 约 75 MB | 约 9 MB |
 
@@ -17,7 +17,7 @@
 保留：`PORT`、`CONFIG_TTL_SECONDS`、`SHORT_LINK_TTL_SECONDS`，解析规则与原
 `createNodeRuntime()` 一致（按 JS `Number()` 解析；`CONFIG_TTL_SECONDS=0` 表示永不过期）。
 
-新增：`DB_PATH`，默认 `data/sublink.redb`，Docker 镜像中为 `/data/sublink.redb`；
+新增：`DB_PATH`，默认 `data/sublink.aof`，Docker 镜像中为 `/data/sublink.aof`；
 设为 `:memory:` 时只存于内存（重启即丢失，等同原内存 KV）。
 
 移除：`REDIS_URL`、`REDIS_HOST`、`REDIS_PORT`、`REDIS_USERNAME`、`REDIS_PASSWORD`、
@@ -31,7 +31,15 @@
 ### TTL
 
 键过期遵循原 Redis 适配器语义：TTL 向下取整，结果不大于 0 时视为永不过期。
-过期键读取时立即不可见，后台每 10 分钟物理清理一次。
+过期键读取时立即不可见，后台每 10 分钟清理一次。
+
+### 持久化
+
+全部数据常驻内存，写操作以 JSON 行追加到 `DB_PATH` 并 fsync 后才生效，启动时重放日志：
+
+- 崩溃导致的末尾半行记录会被丢弃并截断，不影响之前的数据；
+- 日志中失效记录（覆盖、删除、过期）超过半数且总数超过 1024 条时，后台清理会把日志原子地重写为只含有效记录；
+- 同一日志文件同时只能被一个进程打开（`<DB_PATH>.lock` 文件锁）。
 
 ## 如何保证行为一致
 

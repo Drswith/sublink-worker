@@ -3,7 +3,7 @@
 use crate::js::number::string_to_number;
 
 pub const DEFAULT_PORT: u16 = 38471;
-pub const DEFAULT_DB_PATH: &str = "data/sublink.redb";
+pub const DEFAULT_DB_PATH: &str = "data/sublink.aof";
 pub const DEFAULT_CONFIG_TTL_SECONDS: f64 = 60.0 * 60.0 * 24.0 * 30.0;
 
 #[derive(Clone, Debug, PartialEq)]
