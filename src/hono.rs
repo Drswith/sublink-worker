@@ -25,6 +25,10 @@ impl Request {
     /// `new Request(url, { method })`; fails where the WHATWG parser would throw.
     pub fn new(method: &str, url: &str) -> Result<Request, String> {
         let parsed = url::Url::parse(url).map_err(|e| format!("Invalid URL {url:?}: {e}"))?;
+        // `new Request(url)` rejects credentials, e.g. from a `Host: user@host` header.
+        if !parsed.username().is_empty() || parsed.password().is_some() {
+            return Err("Request cannot be constructed from a URL that includes credentials".into());
+        }
         Ok(Request { method: method.to_string(), url: parsed.into(), headers: Vec::new(), body: Vec::new() })
     }
 

@@ -269,6 +269,7 @@ const INPUTS = {
     // isSame destructures each existing entry, so a null entry throws.
     null_outbound: 'outbounds:\n  - ~\n  - {type: direct, tag: DIRECT}\nproxies:\n  - {name: A, type: ss, server: 1.1.1.1, port: 1, cipher: aes-128-gcm, password: x}\n',
     null_proxy_first: 'proxies:\n  - ~\n  - {name: A, type: ss, server: 1.1.1.1, port: 1, cipher: aes-128-gcm, password: x}\n',
+    arraylike_user_groups: 'proxies:\n  - {name: A, type: ss, server: a.com, port: 1, cipher: aes-128-gcm, password: p}\nproxy-groups:\n  - {name: Z, proxies: {length: 1}}\n  - {name: W, use: {length: "2"}}\n',
     proto_surge_ini: '[General]\n__proto__ = 1\nloglevel = notify\n[Proxy]\nA = ss, a.com, 1, encrypt-method=aes-128-gcm, password=p\n[Proxy Group]\nG = select, A\n',
 };
 
@@ -497,6 +498,23 @@ add('config/null-entries', [
     { ...post(JSON.stringify({ type: 'singbox', content: { outbounds: [null, { type: 'direct', tag: 'DIRECT' }], route: { rules: [] } } })), capture: true },
     get('/singbox?config=' + encodeURIComponent(P.ss_sip002) + '&configId={{1}}'),
 ]);
+// V8 renders computed string keys with dots, call arguments as (...) and string literals in double quotes.
+add('config/v8-error-texts', [
+    { ...post(JSON.stringify({ type: 'surge', content: { 'proxy-groups': 'x' } })), capture: true },
+    get('/surge?config=' + encodeURIComponent(P.ss_sip002) + '&configId={{0}}'),
+    { ...post(JSON.stringify({ type: 'surge', content: { 'proxy-groups': [{ name: 5, type: 'select', proxies: ['DIRECT'] }] } })), capture: true },
+    get('/surge?config=' + encodeURIComponent(P.ss_sip002) + '&configId={{1}}'),
+    { ...post(JSON.stringify({ type: 'clash', content: { 'proxy-groups': 'x' } })), capture: true },
+    get('/clash?config=' + encodeURIComponent(P.ss_sip002) + '&configId={{2}}'),
+    { ...post(JSON.stringify({ type: 'clash', content: { proxies: 5 } })), capture: true },
+    get('/clash?config=garbage&configId={{3}}'),
+]);
+for (const route of ['singbox', 'clash', 'surge', 'subconverter']) {
+    add(`${route}/selected-arraylike`, [
+        get(`/${route}` + q({ config: P.ss_sip002, selectedRules: '{"length":0}' })),
+        get(`/${route}` + q({ config: P.ss_sip002, selectedRules: '{"length":"0"}' })),
+    ]);
+}
 add('config/surge', [
     { ...post(JSON.stringify({ type: 'surge', content: { general: { loglevel: 'verbose' } } })), capture: true },
     get('/surge?config=' + encodeURIComponent(PLAIN_LIST) + '&configId={{0}}'),

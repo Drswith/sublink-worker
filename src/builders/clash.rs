@@ -309,7 +309,7 @@ impl ClashBuilder {
         if !g.truthy() {
             return Ok(Vec::new());
         }
-        expect_array(g, "(this.config['proxy-groups'] || [])", "some").cloned().map(|a| a.to_vec())
+        expect_array(g, "(this.config.proxy-groups || [])", "some").cloned().map(|a| a.to_vec())
     }
 
     fn ensure_groups(&mut self) -> JsResult<()> {
@@ -324,7 +324,7 @@ impl ClashBuilder {
         match self.core.config.as_object_mut().and_then(|c| c.get_mut("proxy-groups")) {
             Some(Value::Array(a)) => Ok(&mut *a),
             _ if current.is_nullish() => Err(JsError::read_prop(&current, method)),
-            _ => Err(JsError::not_function(&format!("this.config['proxy-groups'].{}", method))),
+            _ => Err(JsError::not_function(&format!("this.config.proxy-groups.{}", method))),
         }
     }
 
@@ -522,7 +522,7 @@ impl ConfigBuilder for ClashBuilder {
         if !proxies.truthy() {
             return Ok(Vec::new());
         }
-        expect_array(proxies, "this.getProxies()", "map").map(|a| a.to_vec())
+        expect_array(proxies, "this.getProxies(...)", "map").map(|a| a.to_vec())
     }
 
     fn get_proxy_name(&self, proxy: &Value) -> JsResult<Value> {
@@ -819,7 +819,7 @@ impl ConfigBuilder for ClashBuilder {
                 if let Some(Value::Array(uses)) = new_group.get("use").cloned() {
                     new_group.set("use", Value::array(uses.iter().filter(|p| all_providers.has(p)).cloned().collect()));
                 }
-                let non_empty = |k: &str| new_group.get(k).and_then(Value::length).is_some_and(|l| l > 0);
+                let non_empty = |k: &str| new_group.get(k).is_some_and(|v| v.length_prop().to_number() > 0.0);
                 if non_empty("proxies") || non_empty("use") || new_group.get("type").is_some_and(Value::truthy) {
                     self.groups_mut("push")?.push(Value::Object(new_group));
                 }

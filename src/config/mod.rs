@@ -153,7 +153,7 @@ fn resolve_selected(selected: &Value) -> Value {
     {
         s = set;
     }
-    let empty = !s.truthy() || s.length() == Some(0);
+    let empty = !s.truthy() || matches!(s.length_prop(), Value::Number(n) if n == 0.0);
     if empty { predefined_rule_set("minimal").unwrap() } else { s }
 }
 

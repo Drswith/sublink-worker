@@ -123,3 +123,11 @@ async fn shorten_v2_returns_short_code() {
     assert!(!code.is_empty());
     assert!(app.store.get(&code).unwrap().is_some(), "short code must be stored");
 }
+
+#[test]
+fn request_urls_with_credentials_are_rejected() {
+    // The Node entry built `new Request(url)` from the Host header, which throws (500) for userinfo.
+    assert!(Request::new("GET", "http://user@host/clash").is_err());
+    assert!(Request::new("GET", "http://:p@host/").is_err());
+    assert!(Request::new("GET", "http://@host/").is_ok());
+}

@@ -186,10 +186,12 @@ impl SurgeBuilder {
         }
     }
 
-    fn groups_or_empty(&self) -> Vec<Value> {
+    /// `(this.config['proxy-groups'] || []).<method>`
+    fn groups_or_empty(&self, method: &str) -> JsResult<Vec<Value>> {
         match self.config().get("proxy-groups") {
-            Value::Array(list) => list.to_vec(),
-            _ => Vec::new(),
+            Value::Array(list) => Ok(list.to_vec()),
+            v if !v.truthy() => Ok(Vec::new()),
+            _ => Err(JsError::not_function(&format!("(this.config.proxy-groups || []).{method}"))),
         }
     }
 
@@ -201,14 +203,14 @@ impl SurgeBuilder {
         if !target.truthy() {
             return Ok(false);
         }
-        for group in self.groups_or_empty() {
+        for group in self.groups_or_empty("some")? {
             let existing = match &group {
                 Value::String(_) => Value::String(proxy_name(&group)?),
                 Value::Object(_) | Value::Array(_) => {
                     let n = group.get("name").clone().or_falsy(|| Value::str(""));
                     match n {
                         Value::String(s) => Value::str(js_trim(&s)),
-                        _ => return Err(JsError::not_function("(group.name || '').trim")),
+                        _ => return Err(JsError::not_function("(group.name || \"\").trim")),
                     }
                 }
                 _ => Value::Undefined,
@@ -234,7 +236,7 @@ impl SurgeBuilder {
                 Ok(())
             }
             _ if current.is_nullish() => Err(JsError::read_prop(&current, "push")),
-            _ => Err(JsError::not_function("this.config['proxy-groups'].push")),
+            _ => Err(JsError::not_function("this.config.proxy-groups.push")),
         }
     }
 
@@ -321,7 +323,7 @@ impl SurgeBuilder {
         let groups = self.config().get("proxy-groups");
         if groups.truthy() {
             let Value::Array(list) = groups else {
-                return Err(JsError::not_function("this.config['proxy-groups'].map"));
+                return Err(JsError::not_function("this.config.proxy-groups.map"));
             };
             for group in list.iter() {
                 let line = match group {
@@ -410,7 +412,7 @@ impl ConfigBuilder for SurgeBuilder {
         match self.config().get("proxies") {
             Value::Array(list) => Ok(list.to_vec()),
             v if !v.truthy() => Ok(Vec::new()),
-            _ => Err(JsError::not_function("this.getProxies().filter")),
+            _ => Err(JsError::not_function("this.getProxies(...).filter")),
         }
     }
 
@@ -510,7 +512,7 @@ impl ConfigBuilder for SurgeBuilder {
         }
         let groups = group_proxies_by_country(&names, |n| n.clone());
         let mut existing: Vec<Value> = Vec::new();
-        for g in self.groups_or_empty() {
+        for g in self.groups_or_empty("map")? {
             let n = Self::trimmed_name(&self.group_name_of(&g)?)?;
             if n.truthy() {
                 existing.push(n);
