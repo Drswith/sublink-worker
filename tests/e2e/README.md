@@ -20,8 +20,8 @@ For every case it:
 
 Matrix: every protocol × sing-box 1.11 / 1.12 / 1.13 / 1.14 and mihomo; all
 protocols with every option on (`comprehensive` rules, custom rules, country
-groups, Clash UI, no auto-select); the three subscription formats; Xray
-round-trip. Surge has no Linux client and is not covered.
+groups, Clash UI, no auto-select); Clash without the generated DNS section;
+the three subscription formats; Xray round-trip. Surge has no Linux client and is not covered.
 
 ## Running
 
@@ -42,12 +42,12 @@ Work files (generated configs, client and server logs) stay in
 ## Known failures
 
 These come from the generated configs themselves and reproduce identically
-on the original Node.js implementation (`c08b647`), so they are kept for
-parity; see `docs/rust-rewrite.md`.
+on the Node.js reference (`2d90c0f`), so they are kept for parity; see
+`docs/rust-rewrite.md`. None of them affects Clash output from share links or
+Base64/Clash subscriptions.
 
 | Cases | Cause |
 | --- | --- |
-| `sing-box-1.14.*/*` | rule sets download through the top-level `http_clients` entry, whose `detour` is the option-less `DIRECT` outbound; 1.14 refuses that at startup (`detour to an empty direct outbound makes no sense`) although `sing-box check` passes |
 | `sing-box-1.11.*/anytls`, `all-options`, `sub-base64` | anytls outbounds are emitted for the 1.11 tier, which does not know the type |
 | `sing-box-*/sub-clash` | the Clash subscription's `dns` section is copied into the sing-box config (`dns.enable: unknown field`) |
 | `sing-box-*/sub-singbox` | non-standard `providers` fields on outbounds (1.12+); 1.12-style DNS servers on the 1.11 tier |

@@ -427,6 +427,9 @@ class Run:
                 self.singbox_case(f"sing-box-{version}/all-options", version, full, None)
         if self.wanted("mihomo/all-options"):
             self.mihomo_case("mihomo/all-options", full, None)
+        # Without the generated DNS section mihomo falls back to its defaults.
+        if self.wanted("mihomo/no-dns"):
+            self.mihomo_case("mihomo/no-dns", {"config": links[0][1], "include_clash_dns": "false"}, links[0][0])
 
         # Remote subscriptions in each format, fetched by the worker from a local URL.
         Target.files["/sub/base64"] = b64(all_links).encode()
