@@ -23,7 +23,8 @@ Sublink Worker 是代理订阅转换器：将 ShadowSocks/VMess/VLESS/Hysteria2/
 - `cargo test` — 全部测试；`cargo test --test unit <过滤词>` 跑单个模块
 - `GOLDEN_FILTER=<用例名片段> cargo test --test golden` — 只比对部分 golden 用例
 - `cargo clippy --all-targets -- -D warnings`、`cargo fmt`（`rustfmt.toml`，行宽 120）
-- `docker build -t sublink-worker:local .`
+- `docker build -t sublink-worker:local .`（builder 为 `ghcr.io/rust-cross/cargo-zigbuild`，在构建机上用 zig 交叉编译 amd64/arm64 静态 musl 二进制，无需 QEMU）
+- 本地交叉编译：`cargo zigbuild --release --target aarch64-unknown-linux-musl`（需 zig 与 cargo-zigbuild）
 
 环境变量：`PORT`、`DB_PATH`、`CONFIG_TTL_SECONDS`（`0` 永不过期）、`SHORT_LINK_TTL_SECONDS`；订阅抓取遵循 `HTTPS_PROXY`/`NO_PROXY`。
 

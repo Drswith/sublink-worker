@@ -7,10 +7,10 @@
 
 | 项目 | Node.js 版本 | Rust 版本 |
 | --- | --- | --- |
-| 运行方式 | Cloudflare Workers / Vercel / Node.js / Docker | 单二进制 / Docker（`scratch` 镜像，约 9 MB） |
+| 运行方式 | Cloudflare Workers / Vercel / Node.js / Docker | 单二进制 / Docker（`scratch` 镜像，约 7 MB；amd64/arm64 均在构建机上交叉编译） |
 | 存储 | Cloudflare KV / Redis / Upstash / 进程内存 | 进程内 HashMap + 追加日志文件（`DB_PATH`） |
 | 静态资源 | `STATIC_DIR` 目录 | favicon 编译进二进制 |
-| 常驻内存（同等负载实测 RSS） | 约 75 MB | 约 9 MB |
+| 常驻内存（同等负载实测 RSS） | 约 75 MB | 约 7 MB |
 
 ### 环境变量
 

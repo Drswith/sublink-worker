@@ -4,7 +4,7 @@
   <h1><b>Sublink Worker</b></h1>
   <h5><i>One Worker, All Subscriptions</i></h5>
 
-  <p><b>A lightweight subscription converter and manager for proxy protocols, shipped as a single Rust binary (or a ~9 MB Docker image).</b></p>
+  <p><b>A lightweight subscription converter and manager for proxy protocols, shipped as a single Rust binary (or a ~7 MB Docker image).</b></p>
 
   <a href="https://trendshift.io/repositories/12291" target="_blank">
     <img src="https://trendshift.io/api/badge/repositories/12291" alt="7Sageer%2Fsublink-worker | Trendshift" width="250" height="55"/>
