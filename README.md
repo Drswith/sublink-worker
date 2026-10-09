@@ -51,7 +51,17 @@ Node.js and Docker deployments listen on port `38471` by default. Open
 
 Compose uses this fork's GHCR image by default. Override `SUBLINK_WORKER_IMAGE`
 in `.env` to use another image or a specific version. GitHub Actions publishes
-images on pushes to `main`, `v*` tags, and manual workflow runs.
+the personal image on pushes to `dev`; `latest` always follows this branch.
+
+### Fork Branches
+
+- `main` mirrors `7Sageer/sublink-worker:main` without personal commits.
+- `dev` carries personal changes and is rebased onto the latest `main`.
+- Personal tests and Docker publishing run from `dev`. The original upstream
+  test and Docker workflows are disabled in this fork's Actions settings, and
+  Cloudflare automatic deployment remains disabled.
+- Before rewriting either branch, preserve its old tip and push with an explicit
+  `--force-with-lease` against the verified remote SHA.
 
 To build and run the current source locally:
 

@@ -1,11 +1,9 @@
-name: Publish Docker Image
+name: Publish Dev Docker Image
 
 on:
   push:
     branches:
-      - main
-    tags:
-      - 'v*'
+      - dev
   pull_request:
     paths:
       - 'Dockerfile'
@@ -13,7 +11,7 @@ on:
       - 'src/**'
       - 'package.json'
       - 'package-lock.json'
-      - '.github/workflows/docker-image.yml'
+      - '.github/workflows/docker-dev.yml'
   workflow_dispatch:
 
 jobs:
@@ -46,7 +44,7 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
             type=sha
-            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/dev' }}
 
       - name: Login to GHCR
         if: github.event_name != 'pull_request'
