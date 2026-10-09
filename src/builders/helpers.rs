@@ -1,6 +1,6 @@
 //! Shared group-building helpers (`builders/helpers/*.js`).
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use crate::config::Rule;
 use crate::i18n::Translator;
@@ -192,8 +192,15 @@ pub fn stringify_without(item: &Value, key: &str) -> String {
 /// The original rescans the whole collection (stringifying every entry) for
 /// each insert; caching the per-item keys keeps the same decisions in O(n).
 pub struct DedupIndex {
-    same_keys: HashSet<String>,
+    /// First position of each identity key, so `collection.some(isSame)`
+    /// can be replayed in order.
+    same_keys: HashMap<String, usize>,
     names: ValueSet,
+    len: usize,
+    first_null: Option<usize>,
+    /// `isSame` destructures its arguments (`const { tag, ...rest } = existing`),
+    /// which throws on a null entry: (property, parameter) for that message.
+    destructures: Option<(&'static str, &'static str)>,
 }
 
 impl DedupIndex {
@@ -201,8 +208,10 @@ impl DedupIndex {
         collection: &[Value],
         get_name: &dyn Fn(&Value) -> JsResult<Value>,
         same_key: &dyn Fn(&Value) -> Option<String>,
+        destructures: Option<(&'static str, &'static str)>,
     ) -> JsResult<Self> {
-        let mut idx = DedupIndex { same_keys: HashSet::new(), names: ValueSet::new() };
+        let mut idx =
+            DedupIndex { same_keys: HashMap::new(), names: ValueSet::new(), len: 0, first_null: None, destructures };
         for item in collection {
             idx.record(item, get_name, same_key)?;
         }
@@ -215,11 +224,14 @@ impl DedupIndex {
         get_name: &dyn Fn(&Value) -> JsResult<Value>,
         same_key: &dyn Fn(&Value) -> Option<String>,
     ) -> JsResult<()> {
-        if let Some(k) = same_key(item) {
-            self.same_keys.insert(k);
+        if self.destructures.is_some() && item.is_null() {
+            self.first_null.get_or_insert(self.len);
+        } else if let Some(k) = same_key(item) {
+            self.same_keys.entry(k).or_insert(self.len);
         }
         let name = get_name(item)?;
         self.names.add(if name.truthy() { name } else { Value::str("") });
+        self.len += 1;
         Ok(())
     }
 
@@ -241,9 +253,15 @@ impl DedupIndex {
             if n.truthy() { n } else { Value::str("") }
         };
         if let Some(k) = same_key(&candidate)
-            && self.same_keys.contains(&k)
+            && let Some(&at) = self.same_keys.get(&k)
+            && self.first_null.is_none_or(|null_at| at < null_at)
         {
             return Ok(());
+        }
+        if let (Some(_), Some((prop, param))) = (self.first_null, self.destructures) {
+            return Err(JsError::type_error(format!(
+                "Cannot destructure property '{prop}' of '{param}' as it is null."
+            )));
         }
         if self.names.has(&target_name) && target_name.truthy() {
             let base = target_name.to_js_string();
@@ -275,7 +293,7 @@ pub fn add_proxy_with_dedup(collection: &mut Vec<Value>, proxy: Value) -> JsResu
         item
     };
     let same_key = |item: &Value| -> Option<String> { json::stringify(item) };
-    let mut idx = DedupIndex::new(collection, &get_name, &same_key)?;
+    let mut idx = DedupIndex::new(collection, &get_name, &same_key, None)?;
     idx.add(collection, proxy, &get_name, &set_name, &same_key)
 }
 

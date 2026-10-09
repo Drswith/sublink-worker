@@ -46,10 +46,15 @@ Sublink Worker 由 Node.js（Hono）实现改为单个 Rust 二进制。对照�
 ## 如何保证行为一致
 
 - 原 38 个 vitest 测试文件全部移植，断言保持等价：37 个在 `tests/unit/`，formLogic 的断言在 `tests/pages.rs`。
-- `tests/golden.rs`：735 组请求序列在原 Node 实现上录制响应（状态码、
+- `tests/golden.rs`：806 组请求序列在原 Node 实现上录制响应（状态码、
   Content-Type、`subscription-userinfo`、`Location` 和完整响应体），Rust 实现必须逐字节一致。
   覆盖全部协议、各类订阅格式、规则预设与自定义规则、国家分组、Clash UI、Clash DNS 开关、
-  sing-box 版本分档（含 1.14 各类基础配置）、上游订阅失败、短链、配置保存及各种错误路径。
+  sing-box 版本分档（含 1.14 各类基础配置）、上游订阅失败、短链、配置保存及各种错误路径，
+  以及差分审计发现的 JS 语义边界（URLSearchParams 解码、`__proto__` 赋值、`typeof null`、
+  类数组 `length`、展开非可迭代值、去重遇到 null 条目等）。
+- `tests/fetch_compat.rs`：86 组原始上游响应（各种 `Content-Encoding` 组合、截断或损坏的压缩流、
+  重定向、URL 中的凭据、各类 User-Agent 取值）由 Node fetch 录制结局，Rust 的抓取层必须一致。
+- 差分审计：对两边运行中的服务按功能区发送数千个边界请求逐一比对，发现的差异均已修复或列入下表。
 - `tests/pages.rs`：首页 HTML 在 4 种语言及多种 `lang`/`Accept-Language` 组合下与原
   JSX 渲染结果逐字节一致。
 - 浏览器端：在 Chromium 中对原版和 Rust 版执行同一组 UI 操作（4 种语言、转换、短链、基础配置、自定义规则、粘贴回填、清空、深色模式、更新提示），46 项观测（DOM、可见文本、整页截图逐像素、弹窗、localStorage、生成链接的响应）全部一致。
@@ -84,9 +89,14 @@ Sublink Worker 由 Node.js（Hono）实现改为单个 Rust 二进制。对照�
 | 未配置 KV（`DISABLE_MEMORY_KV=true`） | 短链/配置接口返回 501 | 存储始终可用，不存在该状态 |
 | YAML 自引用锚点（如 `a: &x [1, *x]`） | 生成循环对象，后续 `JSON.stringify` 抛错（500） | 别名取锚点在该位置的快照（`[1, []]`），不再报错 |
 | JSON 中的孤立代理项（如 `"\ud800"`） | 原样保留在字符串里 | 替换为 U+FFFD |
-| `selectedRules` 取值为 `constructor`、`toString`、`__proto__` 等对象原型属性名 | 被当作“预设”，后续因类型错误返回异常结果 | 视为非预设：按 JSON 解析失败处理（回退到 minimal 预设，`/subconverter` 返回 400） |
+| 以 `constructor`、`toString`、`__proto__` 等 `Object.prototype` 成员名作为键名的输入（`selectedRules` 预设名、`lang`、自定义规则名、Surge 段名、`__proto__://` 链接等） | 命中原型成员，得到未翻译的名称、异常输出或 500 | 按普通键处理（`selectedRules` 按 JSON 解析失败回退到 minimal，`/subconverter` 返回 400）；`__proto__` 键在赋值与深拷贝时同样被丢弃，但不模拟它带来的原型继承 |
+| 数组充当配置对象（如基础配置为 `[1,2]`、`route: []`） | 数组上可以挂命名属性，输出只剩数组元素或报其他错误 | 数组不能携带命名属性，返回 500，报错文本不同 |
+| YAML `!!binary` 值 | 读成 `Uint8Array`，Clash 输出 `!!binary`，Surge 输出逗号分隔的字节 | 读成以下标为键的对象 |
 | 首页内联的表单脚本 | esbuild 重新打印后的代码（部分局部变量被改名、注释被删除） | 原始源码；功能完全相同 |
 | 抓取订阅时的代理 | Node `fetch` 忽略 `HTTPS_PROXY` 等环境变量 | 遵循 `HTTPS_PROXY` / `HTTP_PROXY` / `NO_PROXY` |
+| 抓取订阅超时 | 转换接口 15 秒；`/xray` 无超时 | 转换接口 15 秒；`/xray` 连接 10 秒、读取空闲 300 秒 |
+| 上游返回不规范的 HTTP 报文（重复的 `Content-Length`、首尾带空白的 `Location`、折行的头部等） | 按 undici 的解析器取舍 | 按 hyper 的解析器取舍，个别报文一方接受而另一方拒绝 |
+| 大订阅 | 节点去重为平方复杂度：2000 个节点约 3 秒，3 万个要十几分钟且期间阻塞整个进程 | 输出相同，3 万个节点约 1–2 秒 |
 | 请求行 + 请求头大小上限 | 16 KB（超出返回 431） | 约 400 KB，长订阅链接更不容易被拒 |
 | 响应传输方式 | `Transfer-Encoding: chunked` | `Content-Length` |
 | 页脚年份 | 容器本地时区 | UTC |

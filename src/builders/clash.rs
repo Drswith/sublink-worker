@@ -557,7 +557,7 @@ impl ConfigBuilder for ClashBuilder {
                 _ => return Err(JsError::error("addProxyWithDedup expects the target collection to be an array")),
             };
             if index.is_none() {
-                index = Some(DedupIndex::new(list, &get_name, &same_key)?);
+                index = Some(DedupIndex::new(list, &get_name, &same_key, Some(("name", "a")))?);
             }
             index.as_mut().unwrap().add(list, converted, &get_name, &set_name, &same_key)?;
         }
@@ -792,12 +792,12 @@ impl ConfigBuilder for ClashBuilder {
                 if let Value::Array(uses) = user_group.get("use")
                     && !uses.is_empty()
                 {
-                    let mut merged = spread_iterable(existing.get("use"));
+                    let mut merged = spread_iterable(existing.get("use"), "(existing.use || [])")?;
                     merged.extend(uses.iter().filter(|p| all_providers.has(p)).cloned());
                     set_prop(existing, "use", Value::array(dedupe(merged)))?;
                 }
                 if let Value::Array(proxies) = user_group.get("proxies") {
-                    let mut merged = spread_iterable(existing.get("proxies"));
+                    let mut merged = spread_iterable(existing.get("proxies"), "(existing.proxies || [])")?;
                     merged.extend(proxies.iter().filter(|p| valid_refs.has(p)).cloned());
                     set_prop(existing, "proxies", Value::array(dedupe(merged)))?;
                 }

@@ -24,14 +24,17 @@ http-body-util = "0.1"
 hyper = { version = "1", features = ["server", "http1"] }
 hyper-util = { version = "0.1", features = ["tokio"] }
 indexmap = "2"
-reqwest = { version = "0.13", default-features = false, features = ["rustls-no-provider", "gzip", "brotli", "deflate", "system-proxy"] }
+# Content decoding is done by hand (src/fetch.rs) to match Node's fetch.
+reqwest = { version = "0.13", default-features = false, features = ["rustls-no-provider", "system-proxy"] }
+# zlib-rs ports zlib itself, so inflate errors and leniency match Node's zlib.
+flate2 = { version = "1", default-features = false, features = ["zlib-rs"] }
+brotli-decompressor = "6"
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
 ryu-js = "1"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "signal", "sync", "io-util"] }
 url = "2"
 
 [dev-dependencies]
-flate2 = "1"
 regex = "1"
 # Paused clock for the subscription timeout test.
 tokio = { version = "1", features = ["test-util"] }

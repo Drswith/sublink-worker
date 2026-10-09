@@ -464,7 +464,7 @@ impl ConfigBuilder for SurgeBuilder {
                 _ => return Err(JsError::error("addProxyWithDedup expects the target collection to be an array")),
             };
             if index.is_none() {
-                index = Some(DedupIndex::new(list, &get_name, &same_key)?);
+                index = Some(DedupIndex::new(list, &get_name, &same_key, None)?);
             }
             index.as_mut().unwrap().add(list, converted, &get_name, &set_name, &same_key)?;
         }

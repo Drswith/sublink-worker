@@ -498,6 +498,15 @@ impl Value {
         }
     }
 
+    /// `v.length` read as a property: objects answer with their own `length` key.
+    pub fn length_prop(&self) -> Value {
+        match self {
+            Value::String(_) | Value::Array(_) => Value::Number(self.length().unwrap_or(0) as f64),
+            Value::Object(o) => o.get("length").cloned().unwrap_or(Value::Undefined),
+            _ => Value::Undefined,
+        }
+    }
+
     /// `Object.keys(v)` for any value (`[]` for primitives without own keys).
     pub fn object_keys(&self) -> Vec<String> {
         match self {

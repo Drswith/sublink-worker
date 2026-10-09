@@ -107,7 +107,7 @@ impl SingboxBuilder {
         let base = if opts.base_config.is_nullish() { sing_box_config().clone() } else { opts.base_config.clone() };
         let mut core = Core::new(opts, &base);
         let node_select = core.t.t("outboundNames.Node Select");
-        let has_servers = core.config.get("dns").get("servers").length().is_some_and(|l| l > 0);
+        let has_servers = core.config.get("dns").get("servers").length_prop().to_number() > 0.0;
         if has_servers {
             let servers = core
                 .config
@@ -117,6 +117,11 @@ impl SingboxBuilder {
                 .and_then(|d| d.get_mut("servers"));
             match servers {
                 Some(Value::Array(list)) => set_prop(&mut list[0], "detour", node_select)?,
+                // An array-like object: `servers[0]` is its "0" key.
+                Some(Value::Object(o)) => match o.get_mut("0") {
+                    Some(first) => set_prop(first, "detour", node_select)?,
+                    None => return Err(JsError::set_prop(&Value::Undefined, "detour")),
+                },
                 Some(Value::String(s)) => {
                     let first: String = s.chars().take(1).collect();
                     return Err(JsError::type_error(format!("Cannot create property 'detour' on string '{}'", first)));
@@ -251,7 +256,7 @@ impl SingboxBuilder {
                 if outbound.is_nullish() {
                     return Err(JsError::read_prop(outbound, "type"));
                 }
-                let empty = |v: &Value| !v.truthy() || v.length() == Some(0);
+                let empty = |v: &Value| !v.truthy() || matches!(v.length_prop(), Value::Number(n) if n == 0.0);
                 if outbound.get("type").as_str() == Some("urltest")
                     && empty(outbound.get("outbounds"))
                     && empty(outbound.get("providers"))
@@ -315,7 +320,7 @@ impl SingboxBuilder {
             }
             let ty = o.get("type").as_str();
             let is_group = matches!(ty, Some("selector" | "urltest"));
-            let non_empty = |v: &Value| v.length().is_some_and(|l| l > 0);
+            let non_empty = |v: &Value| v.length_prop().to_number() > 0.0;
             if !is_group || non_empty(o.get("outbounds")) || non_empty(o.get("providers")) {
                 out.push(o);
             }
@@ -663,7 +668,7 @@ impl ConfigBuilder for SingboxBuilder {
             }
             let list = self.outbounds_mut("push")?;
             if index.is_none() {
-                index = Some(DedupIndex::new(list, &get_name, &same_key)?);
+                index = Some(DedupIndex::new(list, &get_name, &same_key, Some(("tag", "existing")))?);
             }
             index.as_mut().unwrap().add(list, converted, &get_name, &set_name, &same_key)?;
         }
@@ -876,7 +881,7 @@ impl ConfigBuilder for SingboxBuilder {
                     && !uses.is_empty()
                 {
                     let valid: Vec<Value> = uses.iter().filter(|p| all_providers.has(p)).cloned().collect();
-                    let mut merged = spread_iterable(existing.get("providers"));
+                    let mut merged = spread_iterable(existing.get("providers"), "(existing.providers || [])")?;
                     merged.extend(valid);
                     set_prop(existing, "providers", Value::array(dedupe(merged)))?;
                 }
@@ -884,7 +889,7 @@ impl ConfigBuilder for SingboxBuilder {
                     && !proxies.is_empty()
                 {
                     let valid: Vec<Value> = proxies.iter().filter(|p| valid_refs.has(p)).cloned().collect();
-                    let mut merged = spread_iterable(existing.get("outbounds"));
+                    let mut merged = spread_iterable(existing.get("outbounds"), "(existing.outbounds || [])")?;
                     merged.extend(valid);
                     set_prop(existing, "outbounds", Value::array(dedupe(merged)))?;
                 }
@@ -924,11 +929,13 @@ impl ConfigBuilder for SingboxBuilder {
     }
 }
 
-/// `[...(value || [])]`
-pub(crate) fn spread_iterable(v: &Value) -> Vec<Value> {
+/// `[...(value || [])]`: strings spread into code points, and any other truthy
+/// non-array throws.
+pub(crate) fn spread_iterable(v: &Value, expr: &str) -> JsResult<Vec<Value>> {
     match v {
-        Value::Array(items) => items.to_vec(),
-        Value::String(s) if !s.is_empty() => s.chars().map(|c| Value::String(c.to_string())).collect(),
-        _ => Vec::new(),
+        _ if !v.truthy() => Ok(Vec::new()),
+        Value::Array(items) => Ok(items.to_vec()),
+        Value::String(s) => Ok(s.chars().map(|c| Value::String(c.to_string())).collect()),
+        _ => Err(JsError::not_iterable(expr)),
     }
 }

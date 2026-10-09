@@ -259,6 +259,16 @@ const INPUTS = {
     dns_null_json: '{"dns": null, "outbounds": [{"type": "shadowsocks", "tag": "S", "server": "s.example.com", "server_port": 1, "method": "aes-128-gcm", "password": "p"}]}',
     dns_policy_null: 'dns:\n  nameserver-policy: null\n  enable: true\nproxies:\n  - {name: D, type: ss, server: s.example.com, port: 1, cipher: aes-128-gcm, password: p}\n',
     dns_date: 'dns: 2024-01-02\nproxies:\n  - {name: D, type: ss, server: s.example.com, port: 1, cipher: aes-128-gcm, password: p}\n',
+    // `/^"(.*)"$/` does not strip quotes around a value holding a line terminator.
+    surge_quote_cr: '[General]\nloglevel = "a\rb"\nk2 = "a\u2028b"\nk3 = "x"\n[Proxy]\nSG-1 = ss, s.example.com, 8388, encrypt-method=aes-128-gcm, password=p\n',
+    // Array-like objects answer `.length` with their own key.
+    arraylike_outbounds: 'outbounds:\n  - {type: direct, tag: DIRECT}\n  - {type: selector, tag: SEL, outbounds: {length: 1, 0: DIRECT}}\n  - {type: urltest, tag: UT, outbounds: {length: 0}}\nproxies:\n  - {name: A, type: ss, server: 1.1.1.1, port: 1, cipher: aes-128-gcm, password: x}\n',
+    // `[...(existing.outbounds || [])]` throws for non-iterables.
+    spread_number: 'outbounds:\n  - {type: direct, tag: DIRECT}\n  - {type: selector, tag: G, outbounds: 5}\nproxy-groups:\n  - {name: G, type: select, proxies: [A]}\nproxies:\n  - {name: A, type: ss, server: 1.1.1.1, port: 1, cipher: aes-128-gcm, password: x}\n',
+    spread_string: 'proxy-groups:\n  - {name: G, type: select, proxies: AB}\n  - {name: G, type: select, proxies: [A]}\nproxies:\n  - {name: A, type: ss, server: 1.1.1.1, port: 1, cipher: aes-128-gcm, password: x}\n',
+    // isSame destructures each existing entry, so a null entry throws.
+    null_outbound: 'outbounds:\n  - ~\n  - {type: direct, tag: DIRECT}\nproxies:\n  - {name: A, type: ss, server: 1.1.1.1, port: 1, cipher: aes-128-gcm, password: x}\n',
+    null_proxy_first: 'proxies:\n  - ~\n  - {name: A, type: ss, server: 1.1.1.1, port: 1, cipher: aes-128-gcm, password: x}\n',
     proto_surge_ini: '[General]\n__proto__ = 1\nloglevel = notify\n[Proxy]\nA = ss, a.com, 1, encrypt-method=aes-128-gcm, password=p\n[Proxy Group]\nG = select, A\n',
 };
 
@@ -474,6 +484,18 @@ add('config/proto-keys', [
     get('/singbox?config=' + encodeURIComponent(P.ss_sip002) + '&configId={{0}}'),
     { ...post(JSON.stringify({ type: 'clash', content: '__proto__:\n  port: 1\nport: 7890\n' })), capture: true },
     get('/clash?config=' + encodeURIComponent(P.ss_sip002) + '&configId={{1}}'),
+]);
+add('config/arraylike-dns', [
+    { ...post(JSON.stringify({ type: 'singbox', content: { outbounds: [{ type: 'direct', tag: 'DIRECT' }], dns: { servers: { length: 1, 0: { tag: 'x' } } }, route: { rules: [] } } })), capture: true },
+    get('/singbox?config=' + encodeURIComponent(P.ss_sip002) + '&configId={{0}}'),
+    { ...post(JSON.stringify({ type: 'singbox', content: { outbounds: [{ type: 'direct', tag: 'DIRECT' }], dns: { servers: { length: '2' } }, route: { rules: [] } } })), capture: true },
+    get('/singbox?config=' + encodeURIComponent(P.ss_sip002) + '&configId={{1}}'),
+]);
+add('config/null-entries', [
+    { ...post(JSON.stringify({ type: 'clash', content: 'proxies:\n  - {name: HK-Node-1, type: ss, server: hk1.example.com, port: 443, cipher: aes-128-gcm, password: test}\n  - ~\n' })), capture: true },
+    get('/clash?config=' + encodeURIComponent(P.ss_sip002) + '&configId={{0}}'),
+    { ...post(JSON.stringify({ type: 'singbox', content: { outbounds: [null, { type: 'direct', tag: 'DIRECT' }], route: { rules: [] } } })), capture: true },
+    get('/singbox?config=' + encodeURIComponent(P.ss_sip002) + '&configId={{1}}'),
 ]);
 add('config/surge', [
     { ...post(JSON.stringify({ type: 'surge', content: { general: { loglevel: 'verbose' } } })), capture: true },

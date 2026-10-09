@@ -168,11 +168,15 @@ async fn get_with_timeout(fetcher: &dyn Fetcher, url: &str, user_agent: &str) ->
 /// `fetchSubscription(url, userAgent)`: parsed content, or null on any failure.
 pub async fn fetch_subscription(fetcher: &dyn Fetcher, url: &str, user_agent: &str) -> Value {
     match get_with_timeout(fetcher, url, user_agent).await {
-        Ok(resp) if resp.ok() => parse_subscription_content(&decode_content(&resp.text())),
-        Ok(resp) => {
+        Ok(resp) if !resp.ok() => {
             eprintln!("Error fetching or parsing HTTP(S) content: Error: HTTP error! status: {}", resp.status);
             Value::Null
         }
+        Ok(FetchResponse { body_error: Some(e), .. }) => {
+            eprintln!("Error fetching or parsing HTTP(S) content: {e}");
+            Value::Null
+        }
+        Ok(resp) => parse_subscription_content(&decode_content(&resp.text())),
         Err(e) => {
             eprintln!("Error fetching or parsing HTTP(S) content: {}", e);
             Value::Null
@@ -194,15 +198,19 @@ pub async fn fetch_subscription_with_format(
     user_agent: &str,
 ) -> Option<FetchedSubscription> {
     match get_with_timeout(fetcher, url, user_agent).await {
-        Ok(resp) if resp.ok() => {
+        Ok(resp) if !resp.ok() => {
+            eprintln!("Error fetching subscription: Error: HTTP error! status: {}", resp.status);
+            None
+        }
+        Ok(FetchResponse { body_error: Some(e), .. }) => {
+            eprintln!("Error fetching subscription: {e}");
+            None
+        }
+        Ok(resp) => {
             let content = decode_content(&resp.text());
             let format = detect_format(&content);
             let subscription_userinfo = resp.header("subscription-userinfo").filter(|s| !s.is_empty());
             Some(FetchedSubscription { content, format, url: url.to_string(), subscription_userinfo })
-        }
-        Ok(resp) => {
-            eprintln!("Error fetching subscription: Error: HTTP error! status: {}", resp.status);
-            None
         }
         Err(e) => {
             eprintln!("Error fetching subscription: {}", e);

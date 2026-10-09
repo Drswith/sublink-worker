@@ -10,6 +10,7 @@ implementation at the tip of its `dev` branch — the parity baseline, currently
 | `yaml_cases.json` | `gen_yaml.mjs` | `tests/yaml_compat.rs` (js-yaml 4 load/dump) |
 | `golden.json.gz` | `gen_golden.mjs` | `tests/golden.rs` (full HTTP responses) |
 | `pages.json.gz` | `gen_pages.mjs` | `tests/pages.rs` (server-rendered home page, and the form script source the page masks) |
+| `fetch_cases.json` | `gen_fetch.mjs` | `tests/fetch_compat.rs` (Node fetch outcomes for raw upstream responses) |
 
 To regenerate (or to extend the corpus) against the original code:
 
@@ -23,6 +24,7 @@ node gen_golden.mjs <repo>/tests/fixtures/golden.json.gz
 node gen_pages.mjs  <repo>/tests/fixtures/pages.json.gz
 node gen_jscore.mjs > <repo>/tests/fixtures/js_core.json
 node gen_yaml.mjs   > <repo>/tests/fixtures/yaml_cases.json
+node gen_fetch.mjs  > <repo>/tests/fixtures/fetch_cases.json   # depends only on the Node version (undici)
 ```
 
 ## Browser UI comparison

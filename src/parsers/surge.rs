@@ -190,7 +190,9 @@ fn parse_surge_value(raw: &str) -> Value {
     if trimmed.is_empty() {
         return Value::str("");
     }
-    let unquoted = if trimmed.len() >= 2 && trimmed.starts_with('"') && trimmed.ends_with('"') {
+    // `/^"(.*)"$/`: `.` stops at line terminators, so such values keep their quotes.
+    let quoted = trimmed.len() >= 2 && trimmed.starts_with('"') && trimmed.ends_with('"');
+    let unquoted = if quoted && !trimmed.contains(['\n', '\r', '\u{2028}', '\u{2029}']) {
         &trimmed[1..trimmed.len() - 1]
     } else {
         trimmed

@@ -53,7 +53,7 @@ Sublink Worker 是代理订阅转换器：将 ShadowSocks/VMess/VLESS/Hysteria2/
 ## 测试
 
 - `tests/unit/`：原 vitest 用例逐文件移植（一个模块对应一个原测试文件）
-- `tests/golden.rs`、`tests/pages.rs`、`tests/js_core.rs`、`tests/yaml_compat.rs`：与 Node 实现录制结果逐字节对照；fixture 生成方法见 `tests/fixtures/reference/README.md`
+- `tests/golden.rs`、`tests/pages.rs`、`tests/js_core.rs`、`tests/yaml_compat.rs`、`tests/fetch_compat.rs`：与 Node 实现录制结果逐字节对照；fixture 生成方法见 `tests/fixtures/reference/README.md`
 - `tests/e2e/clients.py`：对运行中的 worker 用真实 sing-box/mihomo 客户端跑通流量（不在 `cargo test` 内，需联网下载客户端），说明与已知失败项见 `tests/e2e/README.md`
 
 ## 本地工作流

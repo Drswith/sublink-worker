@@ -28,6 +28,7 @@ impl MockFetcher {
                 status,
                 headers: headers.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect(),
                 body: body.as_bytes().to_vec(),
+                body_error: None,
             },
         );
     }

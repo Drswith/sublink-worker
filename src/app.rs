@@ -320,10 +320,14 @@ impl Ctx<'_> {
             if trimmed.starts_with("http://") || trimmed.starts_with("https://") {
                 match self.app.fetcher.get(trimmed, Some(&user_agent)).await {
                     Ok(response) => {
+                        // The original read the header before awaiting the body.
                         if userinfo.is_none() {
                             userinfo = response.header("subscription-userinfo").filter(|v| !v.is_empty());
                         }
-                        keep(try_decode_subscription_lines(&response.text(), true).into_vec(), &mut lines);
+                        match &response.body_error {
+                            Some(e) => eprintln!("Failed to fetch the proxy {e}"),
+                            None => keep(try_decode_subscription_lines(&response.text(), true).into_vec(), &mut lines),
+                        }
                     }
                     Err(e) => eprintln!("Failed to fetch the proxy {e}"),
                 }
