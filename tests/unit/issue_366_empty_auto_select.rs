@@ -13,5 +13,5 @@ async fn does_not_emit_empty_urltest_outbound_when_no_proxies_are_parsed() {
     assert!(find(config.get("outbounds"), "tag", "⚡ 自动选择").is_none());
     let node_select = outbound(&config, "🚀 节点选择");
     assert!(!has(node_select.get("outbounds"), "⚡ 自动选择"));
-    assert_eq!(strs(node_select.get("outbounds")), ["DIRECT"]);
+    assert_eq!(exact_strs(node_select.get("outbounds")), ["DIRECT"]);
 }

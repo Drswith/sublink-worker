@@ -49,6 +49,7 @@ async fn proxy_section_lists_supported_proxies() {
 async fn generates_valid_surge_group_syntax() {
     let result = build(MIXED).await;
     let line = result.lines().find_map(|l| l.split_once("⚡ 自动选择 = url-test,")).expect("auto select group").1;
+    assert!(!line.is_empty());
     for item in line
         .split(',')
         .map(str::trim)

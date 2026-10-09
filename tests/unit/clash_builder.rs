@@ -24,7 +24,7 @@ proxy-groups:
     ";
     let built = clash(&opts(input, "minimal".into())).await;
     let grp = group(&built, "自定义选择");
-    assert_eq!(strs(grp.get("proxies")), ["DIRECT", "REJECT", "Valid-SS"]);
+    assert_eq!(exact_strs(grp.get("proxies")), ["DIRECT", "REJECT", "Valid-SS"]);
 }
 
 #[tokio::test]
@@ -69,8 +69,8 @@ ss://YWVzLTEyOC1nY206dGVzdA@example.com:444#US-Node-1
     let built = clash(&opts(input, "minimal".into())).await;
     let private = group(&built, &t("outboundNames.Private"));
     let cn = group(&built, &t("outboundNames.Location:CN"));
-    assert_eq!(strs(private.get("proxies"))[0], "DIRECT");
-    assert_eq!(strs(cn.get("proxies"))[0], "DIRECT");
+    assert_eq!(private.get("proxies").get("0").as_str(), Some("DIRECT"));
+    assert_eq!(cn.get("proxies").get("0").as_str(), Some("DIRECT"));
     let fallback = group(&built, &t("outboundNames.Fall Back"));
-    assert_ne!(strs(fallback.get("proxies"))[0], "DIRECT");
+    assert_ne!(fallback.get("proxies").get("0").as_str(), Some("DIRECT"));
 }

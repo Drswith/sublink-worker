@@ -1,5 +1,7 @@
 // Captures GET / for several languages; tests/pages.rs compares against it.
-import { writeFileSync } from 'node:fs';
+// The page masks the inlined form script (esbuild reprints it), so its source
+// file is recorded separately.
+import { readFileSync, writeFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import { createApp, MemoryKVAdapter } from './golden-bundle.mjs';
 const app = createApp({ kv: new MemoryKVAdapter(), logger: console, config: {} });
@@ -19,5 +21,6 @@ for (const c of cases) {
   html = html.split('© ' + year + ' ').join('© {{year}} ');
   out.push({ ...c, status: res.status, contentType: res.headers.get('content-type'), html });
 }
-writeFileSync(process.argv[2], gzipSync(JSON.stringify(out), { level: 9 }));
+const formLogic = readFileSync('src/components/formLogic.js', 'utf8');
+writeFileSync(process.argv[2], gzipSync(JSON.stringify({ pages: out, formLogic }), { level: 9 }));
 process.exit(0);

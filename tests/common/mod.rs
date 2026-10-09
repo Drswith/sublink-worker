@@ -148,6 +148,12 @@ pub fn strs(value: &Value) -> Vec<String> {
     value.as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect()).unwrap_or_default()
 }
 
+/// vitest `toEqual` on a string array: unlike `strs`, nothing is filtered out.
+pub fn exact_strs(value: &Value) -> Vec<String> {
+    let list = value.as_array().unwrap_or_else(|| panic!("expected an array, got {value:?}"));
+    list.iter().map(|x| x.as_str().unwrap_or_else(|| panic!("non-string item {x:?}")).to_string()).collect()
+}
+
 pub fn names(list: &Value, key: &str) -> Vec<String> {
     list.as_array().map(|a| a.iter().map(|x| x.get(key).to_js_string()).collect()).unwrap_or_default()
 }

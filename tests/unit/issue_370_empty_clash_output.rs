@@ -56,7 +56,7 @@ async fn uses_plain_clash_subscription_url_as_provider() {
     let provider = built.get("proxy-providers").object_keys()[0].clone();
     assert_match(&provider, "^_auto_provider_[a-z0-9]+$");
     assert_eq!(built.get("proxy-providers").get(&provider).get("url").as_str(), Some(url));
-    assert_eq!(strs(group(&built, "⚡ 自动选择").get("use")), [provider]);
+    assert_eq!(exact_strs(group(&built, "⚡ 自动选择").get("use")), [provider]);
     assert_no_empty_url_test_group(&built);
 }
 
@@ -64,6 +64,6 @@ async fn uses_plain_clash_subscription_url_as_provider() {
 async fn no_empty_auto_select_group_without_proxies_or_providers() {
     let built = clash(&opts("not-a-valid-subscription", "minimal".into())).await;
     assert!(find(built.get("proxy-groups"), "name", "⚡ 自动选择").is_none());
-    assert_eq!(strs(group(&built, "🚀 节点选择").get("proxies")), ["DIRECT", "REJECT"]);
+    assert_eq!(exact_strs(group(&built, "🚀 节点选择").get("proxies")), ["DIRECT", "REJECT"]);
     assert_no_empty_url_test_group(&built);
 }

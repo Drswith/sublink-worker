@@ -70,6 +70,7 @@ async fn all_rule_providers_share_the_legacy_format() {
         ..opts(INPUT, v(r#"["AI Services","Google","YouTube","Telegram"]"#))
     })
     .await;
+    assert!(config.get("rule-providers").is_plain_object());
     for (name, provider) in config.get("rule-providers").own_entries() {
         assert_eq!(provider.get("format").as_str(), Some("yaml"), "{name}");
         assert!(provider.get("url").as_str().unwrap().contains(".yaml"), "{name}");

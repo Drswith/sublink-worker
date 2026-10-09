@@ -33,6 +33,7 @@ fn generate_rules_treats_empty_src_ip_cidr_as_empty_list() {
 #[test]
 fn generate_rules_accepts_src_ip_cidr_as_string_list() {
     let rules = rules_for(r#"[{"name":"LAN","src_ip_cidr":[" 192.168.11.13/32 ","","192.168.10.0/24"]}]"#);
+    assert_eq!(rules[0].outbound.as_str(), Some("LAN"));
     assert_eq!(
         rules[0].src_ip_cidr.as_deref(),
         Some(&["192.168.11.13/32".to_string(), "192.168.10.0/24".to_string()][..])

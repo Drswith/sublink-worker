@@ -30,7 +30,7 @@ vmess://ewogICJ2IjogIjIiLAogICJwcyI6ICJ0dzEubm9kZS5jb20iLAogICJhZGQiOiAidHcxLm5v
 
     let node_select_label = t("outboundNames.Node Select");
     let auto_name = t("outboundNames.Auto Select");
-    let mut actual = strs(group(&built, &node_select_label).get("proxies"));
+    let mut actual = exact_strs(group(&built, &node_select_label).get("proxies"));
     let mut expected = vec![
         "DIRECT".to_string(),
         "REJECT".into(),
