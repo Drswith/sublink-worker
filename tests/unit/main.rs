@@ -35,5 +35,6 @@ mod surge_config_parser;
 mod surge_input_parsing;
 mod surge_unsupported_proxy;
 mod udp_handling;
+mod upstream_fetch_failure;
 mod worker;
 mod yaml_parsing;

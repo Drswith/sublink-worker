@@ -68,7 +68,7 @@ async function run(base) {
         const rules = Alpine.$data(document.querySelector('[x-data="customRulesData()"]'));
         const pick = (o, keys) => Object.fromEntries(keys.map((k) => [k, o[k]]));
         return JSON.stringify({
-            form: pick(data, ['input', 'showAdvanced', 'selectedRules', 'selectedPredefinedRule', 'groupByCountry', 'includeAutoSelect',
+            form: pick(data, ['input', 'showAdvanced', 'selectedRules', 'selectedPredefinedRule', 'groupByCountry', 'includeAutoSelect', 'includeClashDns',
                 'enableClashUI', 'externalController', 'externalUiDownloadUrl', 'customUA', 'configType', 'configEditor',
                 'configValidationState', 'configValidationMessage', 'currentConfigId', 'generatedLinks', 'shortenedLinks', 'customShortCode']),
             rules: pick(rules, ['mode', 'rules', 'jsonContent', 'jsonError', 'jsonValid']),
@@ -102,6 +102,7 @@ async function run(base) {
     await page.fill('input[x-model="rule.domain_suffix"]', 'example.org,example.net');
     await page.fill('input[x-model="rule.src_ip_cidr"]', '192.168.1.13/32');
     await page.locator('input[x-model="groupByCountry"]').evaluate((el) => el.click());
+    await page.locator('input[x-model="includeClashDns"]').evaluate((el) => el.click());
     await page.locator('input[x-model="enableClashUI"]').evaluate((el) => el.click());
     await page.fill('input[x-model="externalController"]', '0.0.0.0:9090');
     await page.fill('input[x-model="customUA"]', 'clash.meta');

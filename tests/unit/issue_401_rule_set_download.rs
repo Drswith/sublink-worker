@@ -20,6 +20,17 @@ async fn build_with_version(version: &str, base_config: Value) -> Value {
     .await
 }
 
+fn direct_outbound(config: &Value) -> Value {
+    config
+        .get("outbounds")
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|o| o.get("tag").as_str() == Some("DIRECT"))
+        .unwrap()
+        .clone()
+}
+
 fn assert_remote_sets_use_detour(config: &Value) {
     let sets = config.get("route").get("rule_set").as_array().unwrap();
     assert!(!sets.is_empty());
@@ -56,12 +67,45 @@ async fn uses_shared_http_client_on_1_14_tier() {
 }
 
 #[tokio::test]
+async fn keeps_direct_detour_target_non_empty_on_1_14_tier() {
+    // sing-box >=1.12 rejects a detour to an empty direct outbound
+    let config = build_with_version("1.14", Value::Null).await;
+    assert_eq!(direct_outbound(&config).get("domain_resolver").as_str(), Some("dns_resolver"));
+}
+
+#[tokio::test]
+async fn leaves_direct_outbound_untouched_on_legacy_tiers() {
+    for version in ["1.11", "1.12"] {
+        assert_json(
+            &direct_outbound(&build_with_version(version, Value::Null).await),
+            r#"{"type":"direct","tag":"DIRECT"}"#,
+        );
+    }
+}
+
+#[tokio::test]
+async fn falls_back_to_first_direct_dns_server_without_default_resolver() {
+    let mut base_config = sing_box_config().clone();
+    base_config
+        .as_object_mut()
+        .unwrap()
+        .get_mut("route")
+        .unwrap()
+        .as_object_mut()
+        .unwrap()
+        .remove("default_domain_resolver");
+    let config = build_with_version("1.14", base_config).await;
+    assert_eq!(direct_outbound(&config).get("domain_resolver").as_str(), Some("dns_resolver"));
+}
+
+#[tokio::test]
 async fn respects_existing_http_clients_on_1_14_tier() {
     let mut base_config = sing_box_config().clone();
     base_config.as_object_mut().unwrap().set("http_clients", v(r#"[{"tag":"my-client","detour":"DIRECT"}]"#));
     let config = build_with_version("1.14", base_config).await;
     assert_json(config.get("http_clients"), r#"[{"tag":"my-client","detour":"DIRECT"}]"#);
     assert_eq!(config.get("route").get("default_http_client").as_str(), Some("my-client"));
+    assert_eq!(direct_outbound(&config).get("domain_resolver").as_str(), Some("dns_resolver"));
 }
 
 async fn fetch_config(query: &str, user_agent: Option<&str>) -> Value {
@@ -83,6 +127,7 @@ async fn returns_1_14_shape_for_sb_ver_1_14_ua_or_latest() {
         fetch_config("&sb_ver=latest", None).await,
     ] {
         assert_eq!(config.get("route").get("default_http_client").as_str(), Some("rule-set-download"));
+        assert_eq!(direct_outbound(&config).get("domain_resolver").as_str(), Some("dns_resolver"));
     }
 }
 

@@ -64,7 +64,8 @@ impl HttpFetcher {
 impl Fetcher for HttpFetcher {
     fn get<'a>(&'a self, url: &'a str, user_agent: Option<&'a str>) -> BoxFuture<'a, Result<FetchResponse, String>> {
         Box::pin(async move {
-            let parsed = url::Url::parse(url).map_err(|_| format!("Failed to parse URL from {}", url))?;
+            // Errors end up in logs, and subscription URLs often embed credentials.
+            let parsed = url::Url::parse(url).map_err(|_| "TypeError: Failed to parse URL".to_string())?;
             let mut req = self
                 .client
                 .get(parsed)
@@ -72,14 +73,14 @@ impl Fetcher for HttpFetcher {
                 .header("accept-language", "*")
                 .header("sec-fetch-mode", "cors");
             req = req.header("user-agent", user_agent.unwrap_or("node"));
-            let resp = req.send().await.map_err(|e| format!("fetch failed: {}", e))?;
+            let resp = req.send().await.map_err(|e| format!("fetch failed: {}", e.without_url()))?;
             let status = resp.status().as_u16();
             let headers = resp
                 .headers()
                 .iter()
                 .map(|(k, v)| (k.as_str().to_string(), v.as_bytes().iter().map(|&b| b as char).collect()))
                 .collect();
-            let body = resp.bytes().await.map_err(|e| format!("fetch failed: {}", e))?.to_vec();
+            let body = resp.bytes().await.map_err(|e| format!("fetch failed: {}", e.without_url()))?.to_vec();
             Ok(FetchResponse { status, headers, body })
         })
     }

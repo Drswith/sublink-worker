@@ -1,8 +1,10 @@
 //! `httpSubscriptionFetcher.js`: download remote subscriptions, undo Base64 /
 //! URI encoding when the payload proves it is encoded, and detect the format.
 
+use std::time::Duration;
+
 use super::content::parse_subscription_content;
-use crate::fetch::Fetcher;
+use crate::fetch::{FetchResponse, Fetcher};
 use crate::js::base64::decode_base64;
 use crate::js::string::{decode_uri_component, is_js_whitespace, js_trim};
 use crate::js::{Value, json};
@@ -153,10 +155,19 @@ pub fn decode_content(text: &str) -> String {
     url_decoded
 }
 
+/// The original aborted subscription downloads (body included) after 15 seconds.
+const SUBSCRIPTION_TIMEOUT: Duration = Duration::from_secs(15);
+
+async fn get_with_timeout(fetcher: &dyn Fetcher, url: &str, user_agent: &str) -> Result<FetchResponse, String> {
+    let ua = if user_agent.is_empty() { None } else { Some(user_agent) };
+    tokio::time::timeout(SUBSCRIPTION_TIMEOUT, fetcher.get(url, ua))
+        .await
+        .unwrap_or_else(|_| Err("TimeoutError: The operation was aborted due to timeout".into()))
+}
+
 /// `fetchSubscription(url, userAgent)`: parsed content, or null on any failure.
 pub async fn fetch_subscription(fetcher: &dyn Fetcher, url: &str, user_agent: &str) -> Value {
-    let ua = if user_agent.is_empty() { None } else { Some(user_agent) };
-    match fetcher.get(url, ua).await {
+    match get_with_timeout(fetcher, url, user_agent).await {
         Ok(resp) if resp.ok() => parse_subscription_content(&decode_content(&resp.text())),
         Ok(resp) => {
             eprintln!("Error fetching or parsing HTTP(S) content: Error: HTTP error! status: {}", resp.status);
@@ -182,8 +193,7 @@ pub async fn fetch_subscription_with_format(
     url: &str,
     user_agent: &str,
 ) -> Option<FetchedSubscription> {
-    let ua = if user_agent.is_empty() { None } else { Some(user_agent) };
-    match fetcher.get(url, ua).await {
+    match get_with_timeout(fetcher, url, user_agent).await {
         Ok(resp) if resp.ok() => {
             let content = decode_content(&resp.text());
             let format = detect_format(&content);

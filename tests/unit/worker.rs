@@ -81,6 +81,18 @@ async fn clash_returns_yaml() {
 }
 
 #[tokio::test]
+async fn clash_can_omit_generated_dns_config() {
+    let config = enc("ss://YWVzLTEyOC1nY206dGVzdA@example.com:443#TestSS");
+    let default_res = request(&app(), &format!("http://localhost/clash?config={config}")).await;
+    assert_eq!(default_res.status, 200);
+    assert!(has_prop(&sublink::yaml::load(&default_res.text()).unwrap(), "dns"));
+
+    let no_dns_res = request(&app(), &format!("http://localhost/clash?config={config}&include_clash_dns=false")).await;
+    assert_eq!(no_dns_res.status, 200);
+    assert!(!has_prop(&sublink::yaml::load(&no_dns_res.text()).unwrap(), "dns"));
+}
+
+#[tokio::test]
 async fn clash_rejects_empty_url_test_groups_with_diagnostic() {
     let config = "
 proxies:

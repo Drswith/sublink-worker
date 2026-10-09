@@ -11,7 +11,7 @@ use crate::fetch::Fetcher;
 use crate::i18n::Translator;
 use crate::js::base64::decode_base64;
 use crate::js::string::{is_js_whitespace, js_trim};
-use crate::js::{JsError, JsResult, Object, Value, deep_copy};
+use crate::js::{ErrorKind, JsError, JsResult, Object, Value, deep_copy};
 use crate::parsers::content::{is_config_result, parse_subscription_content};
 use crate::parsers::parse_proxy;
 use crate::parsers::subscription::{Format, fetch_subscription_with_format};
@@ -31,6 +31,8 @@ pub struct BuildOptions {
     pub user_agent: String,
     pub group_by_country: bool,
     pub include_auto_select: bool,
+    /// Clash only: `false` drops the generated `dns` section.
+    pub include_clash_dns: bool,
     pub enable_clash_ui: bool,
     pub external_controller: Option<String>,
     pub external_ui_download_url: Option<String>,
@@ -48,6 +50,7 @@ impl Default for BuildOptions {
             user_agent: String::new(),
             group_by_country: false,
             include_auto_select: true,
+            include_clash_dns: true,
             enable_clash_ui: false,
             external_controller: None,
             external_ui_download_url: None,
@@ -367,7 +370,10 @@ pub async fn parse_custom_items<B: ConfigBuilder + ?Sized>(b: &mut B, fetcher: &
             if trimmed.starts_with("http://") || trimmed.starts_with("https://") {
                 let outcome: JsResult<()> = async {
                     let Some(fetched) = fetch_subscription_with_format(fetcher, &trimmed, &user_agent).await else {
-                        return Ok(());
+                        return Err(JsError::service(
+                            502,
+                            "Unable to fetch upstream subscription; check its URL and server connectivity",
+                        ));
                     };
                     if let Some(info) = &fetched.subscription_userinfo
                         && b.core().subscription_userinfo.is_none()
@@ -394,8 +400,11 @@ pub async fn parse_custom_items<B: ConfigBuilder + ?Sized>(b: &mut B, fetcher: &
                     Ok(())
                 }
                 .await;
-                if let Err(e) = outcome {
-                    eprintln!("Error processing HTTP subscription: {}", e.message);
+                // A failed upstream must not degrade into a config without its nodes.
+                match outcome {
+                    Err(e) if matches!(e.kind, ErrorKind::Service(_)) => return Err(e),
+                    Err(_) => return Err(JsError::service(502, "Unable to process upstream subscription")),
+                    Ok(()) => {}
                 }
                 continue;
             }

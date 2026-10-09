@@ -165,6 +165,7 @@ impl Ctx<'_> {
             user_agent: self.user_agent(),
             group_by_country: self.query("group_by_country").as_deref() == Some("true"),
             include_auto_select: self.query("include_auto_select").as_deref() != Some("false"),
+            include_clash_dns: self.query("include_clash_dns").as_deref() != Some("false"),
             enable_clash_ui: self.query("enable_clash_ui").as_deref() == Some("true"),
             external_controller: self.query("external_controller"),
             external_ui_download_url: self.query("external_ui_download_url"),

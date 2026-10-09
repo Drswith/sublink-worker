@@ -281,6 +281,7 @@ pub struct ClashBuilder {
     pub enable_clash_ui: bool,
     pub external_controller: Option<String>,
     pub external_ui_download_url: Option<String>,
+    pub include_dns: bool,
 }
 
 impl ClashBuilder {
@@ -291,6 +292,7 @@ impl ClashBuilder {
             enable_clash_ui: opts.enable_clash_ui,
             external_controller: opts.external_controller.clone().filter(|s| !s.is_empty()),
             external_ui_download_url: opts.external_ui_download_url.clone().filter(|s| !s.is_empty()),
+            include_dns: opts.include_clash_dns,
         }
     }
 
@@ -482,6 +484,11 @@ impl ClashBuilder {
             set_prop(&mut self.core.config, "external-ui-name", ui_name)?;
             set_prop(&mut self.core.config, "external-ui-url", ui_url)?;
             set_prop(&mut self.core.config, "secret", secret)?;
+        }
+        if !self.include_dns
+            && let Some(config) = self.core.config.as_object_mut()
+        {
+            config.remove("dns");
         }
         crate::yaml::dump(&self.core.config)
     }

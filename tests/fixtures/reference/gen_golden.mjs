@@ -185,6 +185,9 @@ const MOCKS = {
     'https://sub.example.com/base64-clash': { body: b64(CLASH_SUB) },
     'https://sub.example.com/urlencoded': { body: encodeURIComponent(PLAIN_LIST) },
     'https://sub.example.com/notfound': { status: 404, body: 'not found' },
+    'https://sub.example.com/forbidden': { status: 403, body: 'forbidden' },
+    'https://sub.example.com/bad-items': { body: [P.ss_sip002, 'vmess://not-base64-json', 'ss://@:'].join('\n') },
+    'https://sub.example.com/nested-bad': { body: ['https://sub.example.com/notfound', P.ss_noname].join('\n') },
     'https://sub.example.com/empty': { body: '' },
     'https://sub.example.com/garbage': { body: 'this is not a subscription at all' },
     'https://sub.example.com/nested': { body: ['https://sub.example.com/plain', P.ss_noname].join('\n') },
@@ -229,6 +232,11 @@ const INPUTS = {
     sub_nested: 'https://sub.example.com/nested',
     sub_crlf: 'https://sub.example.com/crlf',
     sub_unreachable: 'https://unreachable.example.com/sub',
+    sub_403: 'https://sub.example.com/forbidden',
+    sub_bad_items: 'https://sub.example.com/bad-items',
+    sub_nested_bad: 'https://sub.example.com/nested-bad',
+    sub_mix_fail: [P.ss_sip002, 'https://sub.example.com/notfound', 'https://sub.example.com/base64'].join('\n'),
+    sub_b64_fail: b64(['https://sub.example.com/plain', 'https://unreachable.example.com/sub'].join('\n')),
     sub_mix: ['https://sub.example.com/base64', 'https://sub.example.com/clash', P.hy2_hop, 'https://sub.example.com/singbox'].join('\n'),
     inline_clash: CLASH_SUB,
     inline_singbox: SINGBOX_SUB,
@@ -280,6 +288,8 @@ const OPTIONS = {
     country: { group_by_country: 'true' },
     country_noauto: { group_by_country: 'true', include_auto_select: 'false' },
     noauto: { include_auto_select: 'false' },
+    nodns: { include_clash_dns: 'false' },
+    nodns_zero: { include_clash_dns: '0' },
     ui: { enable_clash_ui: 'true', external_controller: '0.0.0.0:9090', external_ui_download_url: 'https://example.com/ui.zip' },
     ui_default: { enable_clash_ui: 'true' },
     lang_en: { lang: 'en-US' },
@@ -406,6 +416,45 @@ add('config/singbox-string', [
     { ...post(JSON.stringify({ type: 'singbox', content: JSON.stringify({ log: { level: 'info' } }) })), capture: true },
     get('/singbox?config=' + encodeURIComponent(PLAIN_LIST) + '&configId={{0}}'),
 ]);
+add('config/clash-object-nodns', [
+    { ...post(JSON.stringify({ type: 'clash', content: { 'mixed-port': 1234, dns: { enable: false } } })), capture: true },
+    get('/clash?config=' + encodeURIComponent(INPUTS.multi_mixed) + '&configId={{0}}&include_clash_dns=false'),
+    get('/clash?config=' + encodeURIComponent(INPUTS.sub_clash) + '&configId={{0}}&include_clash_dns=false'),
+]);
+// sing-box 1.14 keeps the rule-set download detour target non-empty.
+const SB114_BASES = {
+    plain: { log: { level: 'debug' }, dns: { servers: [{ tag: 'x', address: '1.1.1.1' }] }, route: { rules: [] } },
+    no_dns: { route: { rules: [] } },
+    no_direct: { outbounds: [], dns: { servers: [{ tag: 'local', type: 'udp' }] }, route: { rules: [] } },
+    direct_not_direct: { outbounds: [{ type: 'block', tag: 'DIRECT' }], dns: { servers: [{ tag: 'local', type: 'udp' }] }, route: { rules: [] } },
+    outbounds_object: { outbounds: { tag: 'DIRECT' }, route: { rules: [] } },
+    mixed_dns: { dns: { servers: [{ tag: 'fake', type: 'fakeip' }, { tag: 'remote', type: 'https', server: '1.1.1.1', detour: 'Proxy' }, { tag: 'doh', type: 'https', server: '223.5.5.5' }, { tag: 'local', type: 'udp', server: '223.5.5.5' }, { type: 'udp', server: '8.8.8.8' }] }, route: { rules: [] } },
+    only_fakeip: { dns: { servers: [{ tag: 'fake', type: 'fakeip' }, { tag: 'remote', type: 'udp', detour: 'Proxy' }] }, route: { rules: [] } },
+    resolver_string: { dns: { servers: [{ tag: 'local', type: 'udp' }] }, route: { rules: [], default_domain_resolver: 'custom' } },
+    resolver_object: { dns: { servers: [{ tag: 'local', type: 'udp' }] }, route: { rules: [], default_domain_resolver: { server: 'local' } } },
+    resolver_empty: { dns: { servers: [{ tag: 'local', type: 'udp' }] }, route: { rules: [], default_domain_resolver: '' } },
+    own_client: { http_clients: [{ tag: 'mine', detour: 'DIRECT' }], dns: { servers: [{ tag: 'local', type: 'udp' }] }, route: { rules: [] } },
+    own_client_nodetour: { http_clients: [{ tag: 'mine' }], dns: { servers: [{ tag: 'local', type: 'udp' }] }, route: { rules: [] } },
+    own_default_client: { http_clients: [{ tag: 'a', detour: 'DIRECT' }, { tag: 'b', detour: 'DIRECT' }], dns: { servers: [{ tag: 'local', type: 'udp' }] }, route: { rules: [], default_http_client: 'b' } },
+    missing_default_client: { dns: { servers: [{ tag: 'local', type: 'udp' }] }, route: { rules: [], default_http_client: 'ghost' } },
+    direct_with_dial: { outbounds: [{ type: 'direct', tag: 'DIRECT', bind_interface: 'eth0' }], dns: { servers: [{ tag: 'local', type: 'udp' }] }, route: { rules: [] } },
+    detour_selector: { http_clients: [{ tag: 'via-proxy', detour: '🚀 节点选择' }], dns: { servers: [{ tag: 'local', type: 'udp' }] }, route: { rules: [] } },
+    null_client: { http_clients: [null, { tag: 'second', detour: 'DIRECT' }], route: { rules: [] } },
+    client_object: { http_clients: { tag: 'x' }, route: { rules: [], default_http_client: 'x' } },
+    client_strings: { http_clients: ['x', 5], route: { rules: [], default_http_client: 'x' } },
+    numeric_tags: { http_clients: [{ tag: 5, detour: 'DIRECT' }], dns: { servers: [{ tag: 'first', type: 'udp' }, { tag: 7, type: 'https' }] }, route: { rules: [], default_http_client: 5 } },
+    servers_object: { dns: { servers: { tag: 'x' } }, route: { rules: [] } },
+    servers_string: { dns: { servers: 'x' }, route: { rules: [] } },
+};
+const DIRECT_OUT = [{ type: 'direct', tag: 'DIRECT' }];
+for (const [name, base] of Object.entries(SB114_BASES)) {
+    const content = { outbounds: DIRECT_OUT, ...base };
+    add(`config/singbox-114/${name}`, [
+        { ...post(JSON.stringify({ type: 'singbox', content })), capture: true },
+        get('/singbox?config=' + encodeURIComponent(P.ss_sip002) + '&configId={{0}}&singbox_version=1.14'),
+        get('/singbox?config=' + encodeURIComponent(P.ss_sip002) + '&configId={{0}}&singbox_version=1.12'),
+    ]);
+}
 add('config/surge', [
     { ...post(JSON.stringify({ type: 'surge', content: { general: { loglevel: 'verbose' } } })), capture: true },
     get('/surge?config=' + encodeURIComponent(PLAIN_LIST) + '&configId={{0}}'),

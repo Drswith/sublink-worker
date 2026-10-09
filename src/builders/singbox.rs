@@ -368,24 +368,23 @@ impl SingboxBuilder {
 
     fn configure_rule_set_download(&mut self) -> JsResult<()> {
         if self.singbox_version == "1.14" {
-            if self.route().get("default_http_client").truthy() {
-                return Ok(());
+            if !self.route().get("default_http_client").truthy() {
+                let clients = self.config().get("http_clients");
+                if !clients.is_array() || clients.length() == Some(0) {
+                    set_prop(
+                        &mut self.core.config,
+                        "http_clients",
+                        Value::array(vec![obj! { "tag" => RULE_SET_HTTP_CLIENT_TAG, "detour" => "DIRECT" }]),
+                    )?;
+                }
+                let first = self.config().get("http_clients").get("0").clone();
+                if first.is_nullish() {
+                    return Err(JsError::read_prop(&first, "tag"));
+                }
+                let tag = first.get("tag").clone();
+                self.route_mut("default_http_client")?.set("default_http_client", tag);
             }
-            let clients = self.config().get("http_clients");
-            if !clients.is_array() || clients.length() == Some(0) {
-                set_prop(
-                    &mut self.core.config,
-                    "http_clients",
-                    Value::array(vec![obj! { "tag" => RULE_SET_HTTP_CLIENT_TAG, "detour" => "DIRECT" }]),
-                )?;
-            }
-            let first = self.config().get("http_clients").get("0").clone();
-            if first.is_nullish() {
-                return Err(JsError::read_prop(&first, "tag"));
-            }
-            let tag = first.get("tag").clone();
-            self.route_mut("default_http_client")?.set("default_http_client", tag);
-            return Ok(());
+            return self.ensure_download_target_not_empty_direct();
         }
         let route = self.route_mut("rule_set")?;
         if let Some(Value::Array(sets)) = route.get_mut("rule_set") {
@@ -394,6 +393,69 @@ impl SingboxBuilder {
                     set_prop(rs, "download_detour", Value::str("DIRECT"))?;
                 }
             }
+        }
+        Ok(())
+    }
+
+    /// sing-box >=1.12 refuses a detour to an option-less direct outbound, which
+    /// broke every remote rule-set download on the 1.14 tier. A domain_resolver
+    /// mirroring the route default makes the target non-empty without changing
+    /// how it dials.
+    fn ensure_download_target_not_empty_direct(&mut self) -> JsResult<()> {
+        let client_tag = self.route().get("default_http_client").clone();
+        let clients = self.config().get("http_clients");
+        let client = if clients.truthy() {
+            expect_array(clients, "(this.config.http_clients || [])", "find")?
+                .iter()
+                .find(|c| strict_equals(c.get("tag"), &client_tag))
+                .cloned()
+        } else {
+            None
+        };
+        let detour = client.map(|c| c.get("detour").clone()).unwrap_or_default();
+        if !detour.truthy() {
+            return Ok(());
+        }
+        let outbounds = self.outbounds();
+        let index = if outbounds.truthy() {
+            expect_array(outbounds, "(this.config.outbounds || [])", "find")?
+                .iter()
+                .position(|o| strict_equals(o.get("tag"), &detour))
+        } else {
+            None
+        };
+        let Some(index) = index else { return Ok(()) };
+        let Some(target) = self.outbounds().get(&index.to_string()).as_object() else { return Ok(()) };
+        if target.get("type").and_then(Value::as_str) != Some("direct")
+            || target.keys().iter().any(|k| *k != "type" && *k != "tag")
+        {
+            return Ok(());
+        }
+
+        let servers = self.config().get("dns").get("servers");
+        let candidates: Vec<&Value> = if servers.truthy() {
+            expect_array(servers, "((intermediate value) || [])", "filter")?
+                .iter()
+                .filter(|s| {
+                    s.get("tag").truthy() && s.get("type").as_str() != Some("fakeip") && !s.get("detour").truthy()
+                })
+                .collect()
+        } else {
+            Vec::new()
+        };
+        let default_resolver = self.route().get("default_domain_resolver");
+        let resolver = if default_resolver.as_str().is_some() {
+            default_resolver.clone()
+        } else {
+            candidates
+                .iter()
+                .find(|s| s.get("type").as_str() == Some("udp"))
+                .or(candidates.first())
+                .map(|s| s.get("tag").clone())
+                .unwrap_or_default()
+        };
+        if resolver.truthy() {
+            set_prop(&mut self.outbounds_mut("find")?[index], "domain_resolver", resolver)?;
         }
         Ok(())
     }

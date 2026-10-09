@@ -33,6 +33,8 @@ url = "2"
 [dev-dependencies]
 flate2 = "1"
 regex = "1"
+# Paused clock for the subscription timeout test.
+tokio = { version = "1", features = ["test-util"] }
 
 [profile.release]
 opt-level = 3
