@@ -1,7 +1,9 @@
 # Rust 重写说明
 
-Sublink Worker 由 Node.js（Hono）实现改为单个 Rust 二进制。行为基线是 Node.js 实现的
-`2d90c0f`（含 sing-box 1.14 规则集下载修复、Clash DNS 开关、上游订阅失败返回 502）。
+Sublink Worker 由 Node.js（Hono）实现改为单个 Rust 二进制。对照基线始终是 Node.js 版 `dev`
+分支的最新提交，当前为 `2d90c0f`（含 sing-box 1.14 规则集下载修复、Clash DNS 开关、上游订阅失败返回 502）。
+`git fetch origin dev && git log --oneline 2d90c0f..origin/dev` 有输出时说明基线已落后，按
+`tests/fixtures/reference/README.md` 重新录制并移植。
 本文记录部署层面的变化、对齐原实现的方式，以及刻意保留或无法保留的差异。
 
 ## 部署变化

@@ -12,7 +12,7 @@
 
 Sublink Worker 是代理订阅转换器：将 ShadowSocks/VMess/VLESS/Hysteria2/Trojan/TUIC/AnyTLS 节点或订阅转为 Sing-Box/Clash/Xray/Surge 配置。单个 Rust 二进制：hyper + tokio（HTTP）、reqwest + rustls（抓取订阅）、内存 HashMap + 追加日志（KV 持久化）、askama（首页 SSR），以 `scratch` Docker 镜像发布。
 
-行为与重写前的 Node.js（Hono）实现逐字节对齐，差异清单见 `docs/rust-rewrite.md`。
+行为与 Node.js（Hono）版 `dev` 分支最新提交（当前 `2d90c0f`）逐字节对齐，差异清单见 `docs/rust-rewrite.md`。
 
 ## 常用命令
 
@@ -40,6 +40,7 @@ Sublink Worker 是代理订阅转换器：将 ShadowSocks/VMess/VLESS/Hysteria2/
 ## 关键约定
 
 - 行为对齐优先：改动必须通过 golden/pages 对照测试；有意改变输出时同步更新 fixture，并在 `docs/rust-rewrite.md` 记录
+- 对照基线始终是最新 `dev`：`dev` 有新提交时按 `tests/fixtures/reference/README.md` 重录 fixture 并移植，再更新文档里的基线提交
 - 业务逻辑统一使用 `js::Value` 并保留 JS 语义（真值、ToString、属性访问报错文本）——这些文本会直接出现在 500 响应里
 - 新增协议：在 `src/parsers/protocols.rs` 加 parser，并在 `src/parsers/mod.rs` 的 scheme 分发中注册
 - 模板缩进只为可读，渲染后按 esbuild 的 JSX 规则折叠空白；插值使用 Hono 的转义（`&quot;`、`&#39;`）

@@ -42,7 +42,7 @@ Work files (generated configs, client and server logs) stay in
 ## Known failures
 
 These come from the generated configs themselves and reproduce identically
-on the Node.js reference (`2d90c0f`), so they are kept for parity; see
+on the latest Node.js `dev` (`2d90c0f`), so they are kept for parity; see
 `docs/rust-rewrite.md`. None of them affects Clash output from share links or
 Base64/Clash subscriptions.
 

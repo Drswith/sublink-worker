@@ -17,11 +17,16 @@ fn mask(html: &str, year: i64) -> String {
     masked.replace(&format!("© {year} "), "© {{year}} ")
 }
 
-#[tokio::test]
-async fn home_page_matches_node_rendering() {
+fn fixture() -> sublink::js::Value {
     let mut raw = String::new();
     flate2::read::GzDecoder::new(&include_bytes!("fixtures/pages.json.gz")[..]).read_to_string(&mut raw).unwrap();
-    let cases = json::parse(&raw).unwrap();
+    json::parse(&raw).unwrap()
+}
+
+#[tokio::test]
+async fn home_page_matches_node_rendering() {
+    let fixture = fixture();
+    let cases = fixture.get("pages");
     let app = test_app(MockFetcher::new());
     let year = sublink::js::date::current_year();
     for case in cases.as_array().unwrap() {
@@ -46,6 +51,19 @@ async fn home_page_matches_node_rendering() {
             panic!("page for {query:?} differs at char {at}:\n got: {:?}\nwant: {:?}", around(&got), around(want));
         }
     }
+}
+
+#[test]
+fn client_script_matches_node_source() {
+    // The page comparison masks this script, so dev changes to it would otherwise go unnoticed.
+    let fixture = fixture();
+    let source = fixture.get("formLogic").as_str().unwrap();
+    let want = source.strip_prefix("export const formLogicFn = ").expect("formLogicFn export").trim_end();
+    let want = want.strip_suffix(';').unwrap_or(want);
+    assert!(
+        include_str!("../assets/web/form-logic.js").trim_end() == want,
+        "assets/web/form-logic.js differs from dev"
+    );
 }
 
 #[test]
