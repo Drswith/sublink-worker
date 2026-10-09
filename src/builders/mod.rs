@@ -128,7 +128,8 @@ impl Core {
             }
             if value.is_undefined() {
                 crate::js::delete_prop(&mut self.config, &key);
-            } else if key == "dns" && value.is_object_like() && !value.is_array() {
+            // `typeof value === 'object'`: null takes this branch and throws in the merge, as in the original.
+            } else if key == "dns" && value.typeof_() == "object" && !value.is_array() {
                 let merged = merge_dns_config(self.config.get("dns"), &value)?;
                 crate::js::set_prop(&mut self.config, &key, merged)?;
             } else {
@@ -224,7 +225,7 @@ pub fn merge_dns_config(existing: &Value, incoming: &Value) -> JsResult<Value> {
                 }
                 _ => deep_copy(&value),
             }
-        } else if key == "nameserver-policy" && value.is_object_like() && !value.is_array() {
+        } else if key == "nameserver-policy" && value.typeof_() == "object" && !value.is_array() {
             let current = result.get(&key).clone().or_falsy(|| Value::Object(Object::new()));
             Value::Object(helpers::merge_objects(&current, &deep_copy(&value)))
         } else {

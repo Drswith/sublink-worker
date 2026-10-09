@@ -254,6 +254,11 @@ const INPUTS = {
     proto_vmess_headers: 'vmess://' + b64('{"v":"2","ps":"vm","add":"a.com","port":"443","id":"b831381d-6324-4d53-ad4f-8cda48b30811","aid":"0","net":"tcp","type":"http","host":"h.com","path":"/p","headers":{"__proto__":["x"],"X":"y"}}'),
     proto_singbox_json: '{"__proto__":{"log":{"level":"warn"}},"log":{"level":"info","__proto__":{"x":1}},"outbounds":[{"type":"shadowsocks","tag":"A","server":"a.com","server_port":1,"method":"aes-128-gcm","password":"p"}]}',
     proto_clash_yaml: '__proto__:\n  mode: global\nmode: rule\ndns:\n  __proto__:\n    enable: false\n  enable: true\nproxies:\n  - {name: A, type: ss, server: a.com, port: 1, cipher: aes-128-gcm, password: p, __proto__: {x: 1}}\n',
+    // `typeof null === 'object'`: a null dns override goes through the DNS merge.
+    dns_null_yaml: 'dns: null\nproxies:\n  - {name: D, type: ss, server: s.example.com, port: 1, cipher: aes-128-gcm, password: p}\n',
+    dns_null_json: '{"dns": null, "outbounds": [{"type": "shadowsocks", "tag": "S", "server": "s.example.com", "server_port": 1, "method": "aes-128-gcm", "password": "p"}]}',
+    dns_policy_null: 'dns:\n  nameserver-policy: null\n  enable: true\nproxies:\n  - {name: D, type: ss, server: s.example.com, port: 1, cipher: aes-128-gcm, password: p}\n',
+    dns_date: 'dns: 2024-01-02\nproxies:\n  - {name: D, type: ss, server: s.example.com, port: 1, cipher: aes-128-gcm, password: p}\n',
     proto_surge_ini: '[General]\n__proto__ = 1\nloglevel = notify\n[Proxy]\nA = ss, a.com, 1, encrypt-method=aes-128-gcm, password=p\n[Proxy Group]\nG = select, A\n',
 };
 
