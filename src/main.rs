@@ -8,6 +8,9 @@ use sublink::settings::Settings;
 use sublink::storage::Store;
 
 const SWEEP_INTERVAL: Duration = Duration::from_secs(600);
+/// Relative to the working directory, which is `/` in the image, so it lands
+/// on the `/data` volume without any configuration.
+const DATA_FILE: &str = "data/sublink.aof";
 
 fn or_exit<T>(result: Result<T, String>, what: &str) -> T {
     result.unwrap_or_else(|e| {
@@ -49,11 +52,7 @@ async fn bind(port: u16) -> std::io::Result<tokio::net::TcpListener> {
 #[tokio::main]
 async fn main() {
     let settings = or_exit(Settings::from_env(), "read settings");
-    let store = if settings.db_path == ":memory:" {
-        Store::in_memory()
-    } else {
-        or_exit(Store::open(&settings.db_path), "open DB_PATH")
-    };
+    let store = or_exit(Store::open(DATA_FILE), "open data/sublink.aof");
     let fetcher = or_exit(HttpFetcher::new(), "create HTTP client");
 
     let mut app = App::new(store.clone(), Arc::new(fetcher));

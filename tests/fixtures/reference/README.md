@@ -39,7 +39,7 @@ npm i playwright-core@1.56 alpinejs@3.13.10 js-yaml@4.1.0 qrcode-generator@1.4.4
 PORT=38580 node dist/node-server.cjs &          # original, from the c08b647 worktree
 node ui_compare.mjs capture http://127.0.0.1:38580 node
 # stop it, then on the same port:
-PORT=38580 DB_PATH=:memory: <repo>/target/release/sublink-worker &
+(cd "$(mktemp -d)" && PORT=38580 <repo>/target/release/sublink-worker) &   # fresh, empty data dir
 node ui_compare.mjs capture http://127.0.0.1:38580 rust
 node ui_compare.mjs diff
 ```

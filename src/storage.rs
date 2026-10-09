@@ -166,7 +166,7 @@ impl Store {
         Ok(store)
     }
 
-    /// Volatile store, used by tests and `DB_PATH=:memory:`.
+    /// Volatile store for tests.
     pub fn in_memory() -> Store {
         Store { inner: Arc::new(Mutex::new(Inner { entries: HashMap::new(), log: None })), clock: system_clock() }
     }

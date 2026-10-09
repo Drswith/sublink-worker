@@ -8,7 +8,7 @@
 | 项目 | Node.js 版本 | Rust 版本 |
 | --- | --- | --- |
 | 运行方式 | Cloudflare Workers / Vercel / Node.js / Docker | 单二进制 / Docker（`scratch` 镜像，约 7 MB；amd64/arm64 均在构建机上交叉编译） |
-| 存储 | Cloudflare KV / Redis / Upstash / 进程内存 | 进程内 HashMap + 追加日志文件（`DB_PATH`） |
+| 存储 | Cloudflare KV / Redis / Upstash / 进程内存 | 进程内 HashMap + 追加日志文件（`data/sublink.aof`） |
 | 静态资源 | `STATIC_DIR` 目录 | favicon 编译进二进制 |
 | 常驻内存（同等负载实测 RSS） | 约 75 MB | 约 7 MB |
 
@@ -17,8 +17,7 @@
 保留：`PORT`、`CONFIG_TTL_SECONDS`、`SHORT_LINK_TTL_SECONDS`，解析规则与原
 `createNodeRuntime()` 一致（按 JS `Number()` 解析；`CONFIG_TTL_SECONDS=0` 表示永不过期）。
 
-新增：`DB_PATH`，默认 `data/sublink.aof`，Docker 镜像中为 `/data/sublink.aof`；
-设为 `:memory:` 时只存于内存（重启即丢失，等同原内存 KV）。
+数据文件固定为工作目录下的 `data/sublink.aof`，Docker 镜像中即 `/data/sublink.aof`（挂载 `/data` 卷即可持久化），无需配置。
 
 移除：`REDIS_URL`、`REDIS_HOST`、`REDIS_PORT`、`REDIS_USERNAME`、`REDIS_PASSWORD`、
 `REDIS_TLS`、`REDIS_KEY_PREFIX`、`KV_REST_API_URL`、`KV_REST_API_TOKEN`、
@@ -35,11 +34,11 @@
 
 ### 持久化
 
-全部数据常驻内存，写操作以 JSON 行追加到 `DB_PATH` 并 fsync 后才生效，启动时重放日志：
+全部数据常驻内存，写操作以 JSON 行追加到 `data/sublink.aof` 并 fsync 后才生效，启动时重放日志：
 
 - 崩溃导致的末尾半行记录会被丢弃并截断，不影响之前的数据；
 - 日志中失效记录（覆盖、删除、过期）超过半数且总数超过 1024 条时，后台清理会把日志原子地重写为只含有效记录；
-- 同一日志文件同时只能被一个进程打开（`<DB_PATH>.lock` 文件锁）。
+- 同一日志文件同时只能被一个进程打开（`data/sublink.aof.lock` 文件锁）。
 
 ## 如何保证行为一致
 

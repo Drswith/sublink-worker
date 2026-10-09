@@ -26,8 +26,9 @@ FROM scratch
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /sublink-worker /sublink-worker
 COPY --from=builder --chown=65534:65534 /data /data
-ENV PORT=38471 \
-    DB_PATH=/data/sublink.aof
+ENV PORT=38471
+# The app writes data/sublink.aof relative to the working directory.
+WORKDIR /
 VOLUME /data
 EXPOSE 38471
 USER 65534:65534

@@ -3,14 +3,11 @@
 use crate::js::number::string_to_number;
 
 pub const DEFAULT_PORT: u16 = 38471;
-pub const DEFAULT_DB_PATH: &str = "data/sublink.aof";
 pub const DEFAULT_CONFIG_TTL_SECONDS: f64 = 60.0 * 60.0 * 24.0 * 30.0;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Settings {
     pub port: u16,
-    /// `:memory:` keeps everything in RAM.
-    pub db_path: String,
     /// `0` (or any non-positive value) stores configs without expiry.
     pub config_ttl_seconds: Option<f64>,
     pub short_link_ttl_seconds: Option<f64>,
@@ -28,7 +25,6 @@ impl Settings {
         };
         Ok(Settings {
             port,
-            db_path: get("DB_PATH").unwrap_or_else(|| DEFAULT_DB_PATH.into()),
             config_ttl_seconds: Some(number("CONFIG_TTL_SECONDS").unwrap_or(DEFAULT_CONFIG_TTL_SECONDS)),
             short_link_ttl_seconds: number("SHORT_LINK_TTL_SECONDS").filter(|n| *n != 0.0),
         })

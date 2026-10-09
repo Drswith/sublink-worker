@@ -1,6 +1,6 @@
 //! test/node-runtime.test.js, now covering the binary's environment settings.
 
-use sublink::settings::{DEFAULT_CONFIG_TTL_SECONDS, DEFAULT_DB_PATH, DEFAULT_PORT, Settings};
+use sublink::settings::{DEFAULT_CONFIG_TTL_SECONDS, DEFAULT_PORT, Settings};
 
 fn settings(vars: &[(&str, &str)]) -> Settings {
     Settings::from_vars(|name| vars.iter().find(|(k, _)| *k == name).map(|(_, v)| v.to_string())).unwrap()
@@ -15,7 +15,6 @@ fn preserves_zero_as_the_no_expiration_config_ttl() {
 fn defaults_match_the_node_runtime() {
     let s = settings(&[]);
     assert_eq!(s.port, DEFAULT_PORT);
-    assert_eq!(s.db_path, DEFAULT_DB_PATH);
     assert_eq!(s.config_ttl_seconds, Some(DEFAULT_CONFIG_TTL_SECONDS));
     assert_eq!(s.short_link_ttl_seconds, None);
 }

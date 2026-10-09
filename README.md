@@ -66,10 +66,11 @@ SUBLINK_WORKER_IMAGE=sublink-worker:local docker compose up -d --pull never
 | Variable | Default | Description |
 | --- | --- | --- |
 | `PORT` | `38471` | HTTP listen port |
-| `DB_PATH` | `data/sublink.aof` (`/data/sublink.aof` in Docker) | Append-only log that persists the in-memory store; `:memory:` keeps data in RAM only |
 | `CONFIG_TTL_SECONDS` | `2592000` (30 days) | Lifetime of saved base configs; `0` keeps them forever |
 | `SHORT_LINK_TTL_SECONDS` | unset (never expire) | Lifetime of short links |
 
+Short links and saved configs are kept in memory and persisted to
+`data/sublink.aof` under the working directory (`/data` in Docker).
 Outbound subscription downloads honor `HTTPS_PROXY` / `HTTP_PROXY` / `NO_PROXY`.
 
 Upgrading from the Node.js version? See [docs/rust-rewrite.md](docs/rust-rewrite.md):
