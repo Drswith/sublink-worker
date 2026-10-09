@@ -4,6 +4,7 @@ use sublink::js::base64::{base64_to_binary, decode_base64, encode_base64};
 use sublink::js::number::{js_number_to_string, parse_float, parse_int, string_to_number};
 use sublink::js::string::{decode_uri, decode_uri_component, encode_uri, encode_uri_component, js_trim};
 use sublink::js::{Value, json};
+use sublink::utils::Params;
 
 fn show(n: f64) -> String {
     if n == 0.0 && n.is_sign_negative() { "-0".into() } else { js_number_to_string(n) }
@@ -62,6 +63,14 @@ fn js_core_matches_node() {
                 check("JSON.parse", actual, &expected);
             }
             "trim" => check("trim", js_trim(input).to_string(), field(case, "output")),
+            "qs" => {
+                let entries: Vec<Value> = Params::parse(input)
+                    .entries()
+                    .iter()
+                    .map(|(k, v)| Value::array(vec![Value::str(k), Value::str(v)]))
+                    .collect();
+                check("URLSearchParams", json::stringify(&Value::array(entries)).unwrap(), field(case, "entries"));
+            }
             other => panic!("unknown fn {other}"),
         }
     }

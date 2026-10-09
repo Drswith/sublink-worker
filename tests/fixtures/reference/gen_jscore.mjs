@@ -22,6 +22,8 @@ for (const s of jsonInputs) {
   try { r = { ok: JSON.stringify(JSON.parse(s)) }; } catch (e) { r = { err: e.name + ':' + e.message }; }
   out.push({ fn: 'json', input: s, ...r });
 }
+const qsInputs = ['a=1&b=2', '?a=1&a=2', 'a=%E4%B8%AD%FF', 'sni=中%FF', 'x=%zz中', 'x=中%', 'x=%E4%B8', 'a+b=c+d', 'a=%2B+%20', '&&a=1&&', '=x', 'a', 'a=', 'a==b', 'a=b=c', '%61=1', '%61%FF中=v', 'k=%ED%A0%80', 'k=%F0%9F%98%80', 'k=😀%FF', 'k=%%41', 'k=%4', 'k=%41%4', 'k=%G1%41', 'k=a%2', 'k=%E4%B8%AD%25FF', 'k=a%FFb中c', 'k=%C3%28', 'k=%u4E2D%41', 'k=%0', 'k=%%', 'k=中%E4', 'k=éé%FF', 'k=%41%zz%FFé', 'k=%41%4é%FF', 'path=%2Fws%3Fed%3D2048&host=a.com', ''];
+for (const s of qsInputs) out.push({ fn: 'qs', input: s, entries: JSON.stringify([...new URLSearchParams(s)]) });
 const trimInputs = [' a ', ' a　', '﻿a ', '\u0085a\u0085', '\t\n\r\v\fa', '​a​', '᠎a'];
 for (const s of trimInputs) out.push({ fn: 'trim', input: s, output: s.trim() });
 console.log(JSON.stringify(out));

@@ -246,6 +246,15 @@ const INPUTS = {
     bad_vmess: 'vmess://not-base64-json',
     bad_ss: 'ss://@:',
     whitespace: '  \n  ' + P.trojan_none + '  \n\n',
+    // URLSearchParams falls back to a byte-wise decode when a value is not valid UTF-8.
+    qs_bad_utf8: 'trojan://pw@h.com:443?sni=中%FF#tr-qs',
+    qs_bad_utf8_plugin: 'ss://YWVzLTI1Ni1nY206cHc=@h.com:1?plugin=obfs-local%3Bobfs%3Dhttp%3Bobfs-host%3D中%FF#ss-qs',
+    // Assigning `__proto__` never creates an own property.
+    proto_plugin: 'ss://YWVzLTI1Ni1nY206cGE6c3M=@host:8388?plugin=v2ray-plugin%3Bmode%3Dwebsocket%3B__proto__%3Dx%3B__proto__#ss-proto',
+    proto_vmess_headers: 'vmess://' + b64('{"v":"2","ps":"vm","add":"a.com","port":"443","id":"b831381d-6324-4d53-ad4f-8cda48b30811","aid":"0","net":"tcp","type":"http","host":"h.com","path":"/p","headers":{"__proto__":["x"],"X":"y"}}'),
+    proto_singbox_json: '{"__proto__":{"log":{"level":"warn"}},"log":{"level":"info","__proto__":{"x":1}},"outbounds":[{"type":"shadowsocks","tag":"A","server":"a.com","server_port":1,"method":"aes-128-gcm","password":"p"}]}',
+    proto_clash_yaml: '__proto__:\n  mode: global\nmode: rule\ndns:\n  __proto__:\n    enable: false\n  enable: true\nproxies:\n  - {name: A, type: ss, server: a.com, port: 1, cipher: aes-128-gcm, password: p, __proto__: {x: 1}}\n',
+    proto_surge_ini: '[General]\n__proto__ = 1\nloglevel = notify\n[Proxy]\nA = ss, a.com, 1, encrypt-method=aes-128-gcm, password=p\n[Proxy Group]\nG = select, A\n',
 };
 
 const SELECTED = {
@@ -455,6 +464,12 @@ for (const [name, base] of Object.entries(SB114_BASES)) {
         get('/singbox?config=' + encodeURIComponent(P.ss_sip002) + '&configId={{0}}&singbox_version=1.12'),
     ]);
 }
+add('config/proto-keys', [
+    { ...post(JSON.stringify({ type: 'singbox', content: '{"__proto__":{"log":{"level":"warn"}},"log":{"level":"debug"},"route":{"rules":[]}}' })), capture: true },
+    get('/singbox?config=' + encodeURIComponent(P.ss_sip002) + '&configId={{0}}'),
+    { ...post(JSON.stringify({ type: 'clash', content: '__proto__:\n  port: 1\nport: 7890\n' })), capture: true },
+    get('/clash?config=' + encodeURIComponent(P.ss_sip002) + '&configId={{1}}'),
+]);
 add('config/surge', [
     { ...post(JSON.stringify({ type: 'surge', content: { general: { loglevel: 'verbose' } } })), capture: true },
     get('/surge?config=' + encodeURIComponent(PLAIN_LIST) + '&configId={{0}}'),

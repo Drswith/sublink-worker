@@ -99,12 +99,26 @@ pub fn prop_computed(base: &Value, key: &str) -> JsResult<Value> {
     Ok(base.get_computed(key))
 }
 
+/// `obj[key] = value` on an ordinary object. Assigning `__proto__` goes
+/// through the prototype setter and never creates an own property (only
+/// `JSON.parse` and js-yaml do), so it is dropped; the prototype change itself
+/// is not modeled.
+pub fn assign(obj: &mut Object, key: &str, value: Value) {
+    if !is_proto_key(key) {
+        obj.set(key, value);
+    }
+}
+
+fn is_proto_key(key: &str) -> bool {
+    key == "__proto__"
+}
+
 /// `base[key] = value` with JS failure semantics (primitives silently ignore
 /// the write; null/undefined throw).
 pub fn set_prop(base: &mut Value, key: &str, value: Value) -> JsResult<()> {
     match base {
         Value::Object(o) => {
-            o.set(key, value);
+            assign(o, key, value);
             Ok(())
         }
         Value::Array(items) => {
@@ -142,7 +156,9 @@ pub fn delete_prop(base: &mut Value, key: &str) {
 pub fn deep_copy(v: &Value) -> Value {
     match v {
         Value::Array(items) => Value::Array(items.iter().map(deep_copy).collect()),
-        Value::Object(o) => Value::Object(o.entries().into_iter().map(|(k, v)| (k.clone(), deep_copy(v))).collect()),
+        Value::Object(o) => Value::Object(
+            o.entries().into_iter().filter(|(k, _)| !is_proto_key(k)).map(|(k, v)| (k.clone(), deep_copy(v))).collect(),
+        ),
         Value::Date(_) => Value::Object(Object::new()),
         other => other.clone(),
     }

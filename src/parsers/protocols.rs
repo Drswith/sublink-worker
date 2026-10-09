@@ -5,7 +5,7 @@
 use crate::js::base64::{base64_to_binary, decode_base64};
 use crate::js::number::parse_int;
 use crate::js::string::{decode_uri_component, js_trim};
-use crate::js::{JsError, JsResult, Object, Value, json, prop};
+use crate::js::{JsError, JsResult, Object, Value, assign, json, prop};
 use crate::obj;
 use crate::utils::{
     Params, create_tls_config, create_transport_config, parse_array, parse_bool, parse_maybe_number, parse_server_info,
@@ -73,7 +73,7 @@ fn parse_plugin_string(plugin: &str) -> Option<(String, Option<Object>)> {
             None => {
                 let key = js_trim(part);
                 if !key.is_empty() {
-                    opts.set(key, Value::Bool(true));
+                    assign(&mut opts, key, Value::Bool(true));
                 }
             }
             Some(eq) => {
@@ -86,7 +86,7 @@ fn parse_plugin_string(plugin: &str) -> Option<(String, Option<Object>)> {
                         "obfs-uri" => "path",
                         other => other,
                     };
-                    opts.set(mapped, Value::str(value));
+                    assign(&mut opts, mapped, Value::str(value));
                 }
             }
         }
@@ -189,7 +189,7 @@ fn build_http_headers(cfg: &Value) -> Value {
             if let Some(items) = normalize_array(&value) {
                 let strings: Vec<Value> = items.iter().map(|e| Value::String(e.to_js_string())).collect();
                 if !strings.is_empty() {
-                    normalized.set(key, Value::array(strings));
+                    assign(&mut normalized, &key, Value::array(strings));
                 }
             }
         }

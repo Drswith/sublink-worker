@@ -3,7 +3,7 @@
 
 use crate::js::number::{parse_int, string_to_number};
 use crate::js::string::{is_js_whitespace, is_word_char, js_trim};
-use crate::js::{JsError, JsResult, Object, Value, json};
+use crate::js::{JsError, JsResult, Object, Value, assign, json};
 use crate::obj;
 
 fn surge_bool(value: Option<&str>) -> bool {
@@ -245,7 +245,7 @@ pub fn convert_surge_ini_to_json(content: &str) -> JsResult<Value> {
                 config.set(section_name.clone(), Value::Object(Object::new()));
             }
             if let Some(Value::Object(target)) = config.get_mut(&section_name) {
-                target.set(key, parse_surge_value(value));
+                assign(target, &key, parse_surge_value(value));
             }
         } else {
             let key = match section_name.as_str() {

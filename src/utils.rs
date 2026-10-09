@@ -309,8 +309,7 @@ pub struct Params {
 impl Params {
     pub fn parse(query: &str) -> Params {
         let q = query.strip_prefix('?').unwrap_or(query);
-        let pairs = url::form_urlencoded::parse(q.as_bytes()).map(|(k, v)| (k.into_owned(), v.into_owned())).collect();
-        Params { pairs, overrides: Vec::new() }
+        Params { pairs: parse_search_params(q), overrides: Vec::new() }
     }
 
     pub fn get(&self, key: &str) -> Option<&str> {
@@ -318,6 +317,11 @@ impl Params {
             return Some(v);
         }
         self.pairs.iter().rev().find(|(k, _)| k == key).map(|(_, v)| v.as_str())
+    }
+
+    /// `[...searchParams]`
+    pub fn entries(&self) -> &[(String, String)] {
+        &self.pairs
     }
 
     pub fn first(&self, key: &str) -> Option<&str> {
@@ -342,6 +346,100 @@ impl Params {
     pub fn either(&self, a: &str, b: &str) -> Value {
         self.val(a).or_falsy(|| self.val(b))
     }
+}
+
+/// Node's WHATWG `URLSearchParams` parser: `+` is a space, and a key or value
+/// goes through `querystring.unescape` only when it holds a valid `%XX`.
+fn parse_search_params(qs: &str) -> Vec<(String, String)> {
+    let bytes = qs.as_bytes();
+    let mut flat: Vec<String> = Vec::new();
+    let mut buf = String::new();
+    let (mut seen_sep, mut encoded, mut encode_check) = (false, false, 0u8);
+    let (mut pair_start, mut last_pos) = (0usize, 0usize);
+    let take = |buf: &mut String, encoded: bool| {
+        let s = std::mem::take(buf);
+        if encoded { qs_unescape(&s) } else { s }
+    };
+    for (i, &c) in bytes.iter().enumerate() {
+        if c == b'&' {
+            if pair_start == i {
+                pair_start = i + 1;
+                last_pos = i + 1;
+                continue;
+            }
+            buf.push_str(&qs[last_pos..i]);
+            flat.push(take(&mut buf, encoded));
+            if !seen_sep {
+                flat.push(String::new());
+            }
+            (seen_sep, encoded, encode_check) = (false, false, 0);
+            pair_start = i + 1;
+            last_pos = i + 1;
+        } else if !seen_sep && c == b'=' {
+            buf.push_str(&qs[last_pos..i]);
+            flat.push(take(&mut buf, encoded));
+            (seen_sep, encoded, encode_check) = (true, false, 0);
+            last_pos = i + 1;
+        } else if c == b'+' {
+            buf.push_str(&qs[last_pos..i]);
+            buf.push(' ');
+            last_pos = i + 1;
+        } else if !encoded {
+            if c == b'%' {
+                encode_check = 1;
+            } else if encode_check > 0 && c.is_ascii_hexdigit() {
+                encode_check += 1;
+                encoded = encode_check == 3;
+            } else {
+                encode_check = 0;
+            }
+        }
+    }
+    if pair_start != bytes.len() {
+        buf.push_str(&qs[last_pos..]);
+        flat.push(take(&mut buf, encoded));
+        if !seen_sep {
+            flat.push(String::new());
+        }
+    }
+    let mut it = flat.into_iter();
+    std::iter::from_fn(|| Some((it.next()?, it.next()?))).collect()
+}
+
+/// `querystring.unescape`: when `decodeURIComponent` throws, Node rebuilds the
+/// bytes from each UTF-16 unit's low byte, which mangles non-ASCII text.
+fn qs_unescape(s: &str) -> String {
+    if let Ok(decoded) = decode_uri_component(s) {
+        return decoded;
+    }
+    let units = utf16(s);
+    let hex = |u: u16| char::from_u32(u as u32).and_then(|c| c.to_digit(16)).map(|d| d as u16);
+    let (len, mut i) = (units.len(), 0usize);
+    let mut out = Vec::with_capacity(len);
+    while i < len {
+        let mut unit = units[i];
+        if unit == b'%' as u16 && i + 2 < len {
+            i += 1;
+            unit = units[i];
+            match hex(unit) {
+                None => {
+                    out.push(b'%');
+                    continue;
+                }
+                Some(high) => match hex(units[i + 1]) {
+                    None => out.push(b'%'),
+                    Some(low) => {
+                        i += 1;
+                        unit = high * 16 + low;
+                    }
+                },
+            }
+        }
+        // Buffer element assignment keeps only the low byte.
+        out.push(unit as u8);
+        i += 1;
+    }
+    String::from_utf8_lossy(&out).into_owned()
 }
 
 pub struct UrlParts {
