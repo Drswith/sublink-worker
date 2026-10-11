@@ -4,18 +4,23 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node scripts/build-vercel.mjs",
-    "deploy": "npm run setup-kv && wrangler deploy",
-    "dev": "wrangler dev",
-    "start": "wrangler dev",
+    "build": "npm run build:frontend && node scripts/build-vercel.mjs",
+    "deploy": "npm run build:frontend && npm run setup-kv && wrangler deploy",
+    "dev": "npm run build:frontend && wrangler dev",
+    "start": "npm run dev",
     "test": "vitest run",
     "setup-kv": "node scripts/setup-kv.cjs",
-    "build:node": "node_modules/.bin/esbuild src/platforms/node-server.js --bundle --platform=node --target=node18 --format=cjs --outfile=dist/node-server.cjs",
+    "build:frontend": "tailwindcss -c tailwind.config.cjs -i src/styles.css -o public/assets/app.css --minify && node scripts/copy-frontend-assets.mjs",
+    "build:node": "npm run build:frontend && node_modules/.bin/esbuild src/platforms/node-server.js --bundle --platform=node --target=node18 --format=cjs --outfile=dist/node-server.cjs",
     "dev:node": "npm run build:node && node dist/node-server.cjs"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.16.8",
+    "@fontsource-variable/inter": "^5.3.0",
+    "@fortawesome/fontawesome-free": "^6.4.0",
+    "alpinejs": "^3.13.10",
     "esbuild": "^0.28.1",
+    "tailwindcss": "^3.4.17",
     "vitest": "^4.1.7",
     "wrangler": "^4.51.0"
   },

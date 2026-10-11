@@ -10,7 +10,12 @@ const MIME_TYPES = {
     '.css': 'text/css',
     '.js': 'text/javascript',
     '.json': 'application/json',
-    '.txt': 'text/plain'
+    '.txt': 'text/plain',
+    '.woff': 'font/woff',
+    '.woff2': 'font/woff2',
+    '.ttf': 'font/ttf',
+    '.otf': 'font/otf',
+    '.eot': 'application/vnd.ms-fontobject'
 };
 
 export function createFileAssetFetcher(rootDirectory = 'public') {

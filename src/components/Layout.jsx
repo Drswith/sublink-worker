@@ -1,5 +1,5 @@
 import { html } from 'hono/html'
-import { APP_KEYWORDS } from '../constants.js';
+import { APP_KEYWORDS, APP_VERSION } from '../constants.js';
 
 export const Layout = (props) => {
   const { title, children } = props
@@ -13,12 +13,11 @@ export const Layout = (props) => {
         <meta name="description" content="Convert and optimize your subscription links easily" />
         <meta name="keywords" content="${APP_KEYWORDS}" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-        <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" onerror="window.__alpineFailed=true"></script>
+        <link rel="preload" href="/assets/fonts/inter-latin-variable.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="stylesheet" href="/assets/app.css?v=${APP_VERSION}" />
+        <link rel="stylesheet" href="/assets/vendor/fontawesome/css/all.min.css?v=${APP_VERSION}" />
+        <script defer src="/assets/vendor/js-yaml.min.js?v=${APP_VERSION}"></script>
+        <script defer src="/assets/vendor/alpine.min.js?v=${APP_VERSION}" onerror="window.__alpineFailed=true"></script>
         <script>
           window.__alpineLoaded = false;
           document.addEventListener('alpine:init', () => { window.__alpineLoaded = true; });
@@ -27,42 +26,10 @@ export const Layout = (props) => {
               console.error('Failed to initialize Alpine.js. Interactive features are disabled.');
               const warning = document.createElement('div');
               warning.className = 'fixed bottom-4 right-4 bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg shadow';
-              warning.textContent = '加载 Alpine.js 失败，页面交互功能不可用，请刷新或检查网络。';
+              warning.textContent = '页面交互组件未能初始化，请刷新页面。';
               document.body.appendChild(warning);
             }
           });
-        </script>
-        <script>
-          tailwind.config = {
-            darkMode: 'class',
-            theme: {
-              extend: {
-                colors: {
-                  primary: {
-                    50: '#eef9ff',
-                    100: '#dcf2ff',
-                    200: '#b2e6ff',
-                    300: '#6ed4ff',
-                    400: '#33c5ff', // Spaceship Blue
-                    500: '#0aa3eb',
-                    600: '#0082ca',
-                    700: '#0068a3',
-                    800: '#005887',
-                    900: '#06496f',
-                    950: '#042f4a',
-                  },
-                  gray: {
-                    850: '#1f2937',
-                    900: '#111827',
-                    950: '#0b0f19', // Deep dark for background
-                  }
-                },
-                fontFamily: {
-                  sans: ['Inter', 'sans-serif'],
-                }
-              }
-            }
-          }
         </script>
         <style>
           body {

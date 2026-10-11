@@ -398,7 +398,7 @@ export function createApp(bindings = {}) {
         }
     });
 
-    app.get('/favicon.ico', async (c) => {
+    const serveAsset = async (c) => {
         if (!runtime.assetFetcher) {
             return c.notFound();
         }
@@ -408,7 +408,10 @@ export function createApp(bindings = {}) {
             runtime.logger.warn('Asset fetch failed', error);
             return c.notFound();
         }
-    });
+    };
+
+    app.get('/assets/*', serveAsset);
+    app.get('/favicon.ico', serveAsset);
 
     return app;
 }

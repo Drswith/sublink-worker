@@ -4,6 +4,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
+COPY scripts ./scripts
+COPY tailwind.config.cjs ./tailwind.config.cjs
 COPY src ./src
 COPY public ./public
 
