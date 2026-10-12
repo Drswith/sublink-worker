@@ -2,7 +2,7 @@
 
 The JSON fixtures next to this directory were captured from the Node.js
 implementation at the tip of its `dev` branch — the parity baseline, currently
-`2d90c0f`. The Rust tests replay them to prove byte-level parity.
+`cbabf58`. The Rust tests replay them to prove byte-level parity.
 
 | Fixture | Generator | Checked by |
 | --- | --- | --- |
@@ -15,7 +15,7 @@ To regenerate (or to extend the corpus) against the original code:
 
 ```sh
 git fetch origin dev
-git worktree add /tmp/sublink-ref origin/dev   # baseline: latest dev, currently 2d90c0f
+git worktree add /tmp/sublink-ref origin/dev   # baseline: latest dev, currently cbabf58
 cd /tmp/sublink-ref && npm ci
 cp <repo>/tests/fixtures/reference/* .
 node_modules/.bin/esbuild golden-entry.js --bundle --platform=node --format=esm --outfile=golden-bundle.mjs
@@ -49,7 +49,7 @@ Set `CHROMIUM_PATH` when Playwright cannot locate its own Chromium build.
 
 ## When `dev` moves
 
-`git log --oneline 2d90c0f..origin/dev` lists the Node.js commits the Rust
+`git log --oneline cbabf58..origin/dev` lists the Node.js commits the Rust
 port has not caught up with yet. For each batch:
 
 1. Add golden cases that exercise the new behavior to `gen_golden.mjs`.

@@ -1,8 +1,8 @@
 # Rust 重写说明
 
 Sublink Worker 由 Node.js（Hono）实现改为单个 Rust 二进制。对照基线始终是 Node.js 版 `dev`
-分支的最新提交，当前为 `2d90c0f`（含 sing-box 1.14 规则集下载修复、Clash DNS 开关、上游订阅失败返回 502）。
-`git fetch origin dev && git log --oneline 2d90c0f..origin/dev` 有输出时说明基线已落后，按
+分支的最新提交，当前为 `cbabf58`（含 sing-box 1.14 规则集下载修复、Clash DNS 开关、上游订阅失败返回 502）。
+`git fetch origin dev && git log --oneline cbabf58..origin/dev` 有输出时说明基线已落后，按
 `tests/fixtures/reference/README.md` 重新录制并移植。
 本文记录部署层面的变化、对齐原实现的方式，以及刻意保留或无法保留的差异。
 
@@ -87,6 +87,12 @@ Sublink Worker 由 Node.js（Hono）实现改为单个 Rust 二进制。对照�
 | `selectedRules` 取值为 `constructor`、`toString`、`__proto__` 等对象原型属性名 | 被当作“预设”，后续因类型错误返回异常结果 | 视为非预设：按 JSON 解析失败处理（回退到 minimal 预设，`/subconverter` 返回 400） |
 | 首页内联的表单脚本 | esbuild 重新打印后的代码（部分局部变量被改名、注释被删除） | 原始源码；功能完全相同 |
 | 抓取订阅时的代理 | Node `fetch` 忽略 `HTTPS_PROXY` 等环境变量 | 遵循 `HTTPS_PROXY` / `HTTP_PROXY` / `NO_PROXY` |
+| 抓取订阅超时 | 转换接口 15 秒；`/xray` 无超时 | 转换接口 15 秒；`/xray` 连接 10 秒、读取空闲 300 秒 |
+| 上游返回不规范的 HTTP 报文（重复的 `Content-Length`、首尾带空白的 `Location`、折行的头部等） | 按 undici 的解析器取舍 | 按 hyper / reqwest 的解析器取舍，个别报文一方接受而另一方拒绝 |
+| 客户端请求行里的 `#片段`、原始的 `"` `<` `>` 或非 ASCII 字节 | Node 的 HTTP 解析器保留片段（进入查询参数和 Surge 托管链接），接受 `"<>`，拒绝非 ASCII | hyper 丢弃片段，拒绝 `"<>`（400），接受非 ASCII |
+| 数组充当配置对象（如基础配置为 `[1,2]`、`route: []`） | 数组上可以挂命名属性，输出只剩数组元素或报其他错误 | 数组不能携带命名属性，返回 500，报错文本不同 |
+| YAML `!!binary` 值 | 读成 `Uint8Array`，Clash 输出 `!!binary`，Surge 输出逗号分隔的字节 | 读成以下标为键的对象 |
+| 大订阅 | 节点去重为平方复杂度：3 万个节点要十几分钟且期间阻塞整个进程 | 输出相同 |
 | 请求行 + 请求头大小上限 | 16 KB（超出返回 431） | 约 400 KB，长订阅链接更不容易被拒 |
 | 响应传输方式 | `Transfer-Encoding: chunked` | `Content-Length` |
 | 页脚年份 | 容器本地时区 | UTC |

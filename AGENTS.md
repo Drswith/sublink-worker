@@ -12,7 +12,7 @@
 
 Sublink Worker 是代理订阅转换器：将 ShadowSocks/VMess/VLESS/Hysteria2/Trojan/TUIC/AnyTLS 节点或订阅转为 Sing-Box/Clash/Xray/Surge 配置。单个 Rust 二进制：hyper + tokio（HTTP）、reqwest + rustls（抓取订阅）、内存 HashMap + 追加日志（KV 持久化）、askama（首页 SSR），以 `scratch` Docker 镜像发布。
 
-行为与 Node.js（Hono）版 `dev` 分支最新提交（当前 `2d90c0f`）逐字节对齐，差异清单见 `docs/rust-rewrite.md`。
+行为与 Node.js（Hono）版 `dev` 分支最新提交（当前 `cbabf58`）逐字节对齐，差异清单见 `docs/rust-rewrite.md`。
 
 ## 常用命令
 
