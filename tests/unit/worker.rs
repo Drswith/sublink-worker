@@ -123,3 +123,12 @@ async fn shorten_v2_returns_short_code() {
     assert!(!code.is_empty());
     assert!(app.store.get(&code).unwrap().is_some(), "short code must be stored");
 }
+#[tokio::test]
+async fn assets_are_served_from_the_dev_public_directory() {
+    let res = request(&app(), "http://localhost/assets/app.css").await;
+    assert_eq!(res.status, 200);
+    assert_eq!(res.header("content-type"), Some("text/css"));
+    assert_eq!(res.body, std::fs::read("assets/static/app.css").unwrap());
+    assert_eq!(request(&app(), "http://localhost/assets/missing.js").await.status, 404);
+    assert_eq!(request(&app(), "http://localhost/assets").await.status, 404);
+}

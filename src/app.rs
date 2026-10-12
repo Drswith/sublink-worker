@@ -20,6 +20,62 @@ use crate::utils::try_decode_subscription_lines;
 
 const DEFAULT_USER_AGENT: &str = "curl/7.74.0";
 static FAVICON: &[u8] = include_bytes!("../assets/web/favicon.ico");
+/// Files under `public/assets` of the dev branch, by path below `/assets/`.
+static STATIC_ASSETS: &[(&str, &str, &[u8])] = &[
+    ("app.css", "text/css", include_bytes!("../assets/static/app.css")),
+    (
+        "fonts/inter-latin-variable.woff2",
+        "font/woff2",
+        include_bytes!("../assets/static/fonts/inter-latin-variable.woff2"),
+    ),
+    ("vendor/alpine.min.js", "text/javascript", include_bytes!("../assets/static/vendor/alpine.min.js")),
+    ("vendor/js-yaml.min.js", "text/javascript", include_bytes!("../assets/static/vendor/js-yaml.min.js")),
+    (
+        "vendor/fontawesome/css/all.min.css",
+        "text/css",
+        include_bytes!("../assets/static/vendor/fontawesome/css/all.min.css"),
+    ),
+    (
+        "vendor/fontawesome/webfonts/fa-brands-400.ttf",
+        "font/ttf",
+        include_bytes!("../assets/static/vendor/fontawesome/webfonts/fa-brands-400.ttf"),
+    ),
+    (
+        "vendor/fontawesome/webfonts/fa-brands-400.woff2",
+        "font/woff2",
+        include_bytes!("../assets/static/vendor/fontawesome/webfonts/fa-brands-400.woff2"),
+    ),
+    (
+        "vendor/fontawesome/webfonts/fa-regular-400.ttf",
+        "font/ttf",
+        include_bytes!("../assets/static/vendor/fontawesome/webfonts/fa-regular-400.ttf"),
+    ),
+    (
+        "vendor/fontawesome/webfonts/fa-regular-400.woff2",
+        "font/woff2",
+        include_bytes!("../assets/static/vendor/fontawesome/webfonts/fa-regular-400.woff2"),
+    ),
+    (
+        "vendor/fontawesome/webfonts/fa-solid-900.ttf",
+        "font/ttf",
+        include_bytes!("../assets/static/vendor/fontawesome/webfonts/fa-solid-900.ttf"),
+    ),
+    (
+        "vendor/fontawesome/webfonts/fa-solid-900.woff2",
+        "font/woff2",
+        include_bytes!("../assets/static/vendor/fontawesome/webfonts/fa-solid-900.woff2"),
+    ),
+    (
+        "vendor/fontawesome/webfonts/fa-v4compatibility.ttf",
+        "font/ttf",
+        include_bytes!("../assets/static/vendor/fontawesome/webfonts/fa-v4compatibility.ttf"),
+    ),
+    (
+        "vendor/fontawesome/webfonts/fa-v4compatibility.woff2",
+        "font/woff2",
+        include_bytes!("../assets/static/vendor/fontawesome/webfonts/fa-v4compatibility.woff2"),
+    ),
+];
 
 pub struct App {
     pub store: Store,
@@ -61,6 +117,7 @@ impl App {
             ("GET", "/shorten-v2") => Ok(ctx.shorten()),
             ("GET", "/resolve") => Ok(ctx.resolve()),
             ("GET", "/favicon.ico") => Ok(favicon(&req.url)),
+            ("GET", p) if p.starts_with("/assets/") => Ok(static_asset(&req.url)),
             ("POST", "/config") => Ok(ctx.save_config()),
             ("GET", p) => match short_link_route(p) {
                 Some((target, code)) => Ok(ctx.redirect(target, &code)),
@@ -108,6 +165,24 @@ fn favicon(url: &str) -> Response {
         vec![("cache-control".into(), "public, max-age=86400".into()), ("content-type".into(), "image/x-icon".into())],
         FAVICON,
     )
+}
+
+fn static_asset(url: &str) -> Response {
+    // Matched on the raw pathname, as the original's file lookup did.
+    let raw_path = url::Url::parse(url).map(|u| u.path().to_string()).unwrap_or_default();
+    let found =
+        raw_path.strip_prefix("/assets/").and_then(|file| STATIC_ASSETS.iter().find(|(name, _, _)| *name == file));
+    match found {
+        Some((_, content_type, bytes)) => Response::new(
+            200,
+            vec![
+                ("cache-control".into(), "public, max-age=86400".into()),
+                ("content-type".into(), (*content_type).into()),
+            ],
+            *bytes,
+        ),
+        None => Response::new(404, vec![("content-type".into(), hono::TEXT_PLAIN_FAST.into())], "Not found"),
+    }
 }
 
 fn handle_error(error: JsError) -> Response {

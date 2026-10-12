@@ -92,6 +92,7 @@ impl Body<'_> {
 struct Layout<'a> {
     title: String,
     keywords: &'a str,
+    version: &'a str,
     body: String,
 }
 
@@ -183,7 +184,7 @@ pub fn index(lang: &str) -> String {
         link_fields: LINK_FIELDS,
     };
     let body = fold_jsx_whitespace(&body.render().expect("index template renders"));
-    let layout = Layout { title: tr.ts("pageTitle"), keywords: APP_KEYWORDS, body };
+    let layout = Layout { title: tr.ts("pageTitle"), keywords: APP_KEYWORDS, version: APP_VERSION, body };
     let mut page = layout.render().expect("layout template renders");
     page.retain(|c| c != OPEN && c != CLOSE);
     page
