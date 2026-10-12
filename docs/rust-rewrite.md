@@ -59,6 +59,11 @@ Sublink Worker 由 Node.js（Hono）实现改为单个 Rust 二进制。对照�
   让 sing-box 1.11–1.14 与 mihomo 加载生成的配置并实际转发流量，只有服务端日志证明请求经过代理才算通过。
   原版与 Rust 版在 72 个用例上的通过/失败结果完全相同（60 个通过），失败项见下节。
 
+- 真实订阅抽查（2026-10-12）：用一条真实 Clash 订阅（单个 hysteria2 节点，经本地 HTTP 伺服）分别请求
+  `/clash`、`/singbox`、`/surge`，与 `cbabf58` 的 Node 实现比对。`/clash` 与 `/singbox` 的响应体逐字节一致；
+  `/surge` 仅托管配置中的自身地址不同，响应传输方式的差异见“已知差异”表。
+  订阅抓取这一步未覆盖：当前出口环境下订阅主机在 TLS 握手后被断开。
+
 录制脚本与重新生成方法见 `tests/fixtures/reference/README.md`。
 
 ## 刻意保留的原有行为
