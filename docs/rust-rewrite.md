@@ -64,12 +64,15 @@ Sublink Worker 由 Node.js（Hono）实现改为单个 Rust 二进制。对照�
   `/surge` 仅托管配置中的自身地址不同，响应传输方式的差异见“已知差异”表。
   订阅抓取这一步未覆盖：当前出口环境下订阅主机在 TLS 握手后被断开。
 
+- SG 独立验证（2026-10-13）：用户提供的普通订阅与 Clash YAML 两条地址，在 SG 原主机抓取均为 HTTP 200；测试时各包含一个 Hysteria2 节点。经 Rust 转换后，mihomo 1.19.32 均完成真实 HTTPS 代理请求，Clash 输出与 Node 基线一致。其他协议仅有合成测试证据，不能推断所有真实订阅均可用。此运行独立于上面的 2026-10-12 本地 HTTP 伺服对照，详情与脱敏附件见 [Clash SG 验证报告](validation/2026-10-13-clash-sg.md)。
+
 录制脚本与重新生成方法见 `tests/fixtures/reference/README.md`。
 
 ## 刻意保留的原有行为
 
 以下行为看起来像缺陷，但为保持输出一致而原样保留：
 
+- `/xray` 是订阅文本聚合与 Base64 输出接口，不解析 Clash YAML 为 Xray 节点。YAML 输入仍输出编码后的 YAML；Node 与 Rust 均保留此行为，文本 round-trip 不代表真实 Xray 客户端可用。
 - 自定义规则在每次生成规则时都会被原地反转顺序；Clash 与 Surge 路由在 `build()`
   之后又调用一次 `formatConfig()`，因此两者的自定义规则顺序与 sing-box 不同。
 - 协议解析抛出的异常会让整个请求返回 500 `Error: <JS 错误信息>`，错误文本与

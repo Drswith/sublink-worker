@@ -1,0 +1,117 @@
+{
+  "status": "completed",
+  "source": "SG dedicated server",
+  "sources": [
+    {
+      "input": "clash",
+      "fetch": [
+        {
+          "user_agent": "SublinkValidation/1.0",
+          "status": 200,
+          "bytes": 373,
+          "sha256": "015981fdf810104ab0e77770c3c2c248710b41b2e71fa190aad03f65aae0e45d",
+          "content_type": "application/yaml; charset=utf-8"
+        },
+        {
+          "user_agent": "Clash.Meta",
+          "status": 200,
+          "bytes": 373,
+          "sha256": "015981fdf810104ab0e77770c3c2c248710b41b2e71fa190aad03f65aae0e45d",
+          "content_type": "application/yaml; charset=utf-8"
+        },
+        {
+          "user_agent": "sing-box/1.14.2",
+          "status": 200,
+          "bytes": 373,
+          "sha256": "015981fdf810104ab0e77770c3c2c248710b41b2e71fa190aad03f65aae0e45d",
+          "content_type": "application/yaml; charset=utf-8"
+        }
+      ],
+      "conversions": [
+        {
+          "format": "clash",
+          "version": null,
+          "rust_status": 200,
+          "node_status": 200,
+          "bytes": 4068,
+          "exact_equal": true,
+          "client_check": {
+            "exit_code": 0,
+            "schema_errors": []
+          },
+          "providers": [
+            {
+              "vehicle_type": "HTTP",
+              "proxy_count": 1,
+              "updated_at": "2026-10-13T02:16:49.974766236Z"
+            },
+            {
+              "vehicle_type": "Compatible",
+              "proxy_count": 8,
+              "updated_at": "0001-01-01T00:00:00Z"
+            },
+            {
+              "vehicle_type": "Compatible",
+              "proxy_count": 3,
+              "updated_at": "0001-01-01T00:00:00Z"
+            },
+            {
+              "vehicle_type": "Compatible",
+              "proxy_count": 3,
+              "updated_at": "0001-01-01T00:00:00Z"
+            },
+            {
+              "vehicle_type": "Compatible",
+              "proxy_count": 3,
+              "updated_at": "0001-01-01T00:00:00Z"
+            },
+            {
+              "vehicle_type": "Compatible",
+              "proxy_count": 3,
+              "updated_at": "0001-01-01T00:00:00Z"
+            },
+            {
+              "vehicle_type": "Compatible",
+              "proxy_count": 3,
+              "updated_at": "0001-01-01T00:00:00Z"
+            }
+          ],
+          "nodes": 1,
+          "api_types": [
+            "Compatible",
+            "Direct",
+            "Hysteria2",
+            "Pass",
+            "PassRule",
+            "Reject",
+            "RejectDrop",
+            "Selector",
+            "URLTest"
+          ],
+          "log_flags": {
+            "error": false,
+            "unsupported proxy type": false,
+            "timeout": false,
+            "initial provider": true,
+            "parse config": false
+          }
+        }
+      ]
+    }
+  ],
+  "traffic": [
+    {
+      "input": "clash",
+      "client": "mihomo 1.19.32",
+      "node_index": 0,
+      "protocol": "Hysteria2",
+      "curl_exit": 0,
+      "valid_trace": true,
+      "selected_node_logged": false,
+      "egress_differs_from_sg": true
+    }
+  ],
+  "direct_target": {
+    "status": 200
+  }
+}

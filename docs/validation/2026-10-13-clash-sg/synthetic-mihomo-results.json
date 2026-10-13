@@ -1,0 +1,77 @@
+[
+  {
+    "case": "mihomo/ss",
+    "passed": true,
+    "detail": "via ss"
+  },
+  {
+    "case": "mihomo/ss2022",
+    "passed": true,
+    "detail": "via ss2022"
+  },
+  {
+    "case": "mihomo/vmess-tcp",
+    "passed": true,
+    "detail": "via vmess-tcp"
+  },
+  {
+    "case": "mihomo/vmess-ws-tls",
+    "passed": true,
+    "detail": "via vmess-ws-tls"
+  },
+  {
+    "case": "mihomo/vless-ws",
+    "passed": true,
+    "detail": "via vless-ws"
+  },
+  {
+    "case": "mihomo/trojan",
+    "passed": true,
+    "detail": "via trojan"
+  },
+  {
+    "case": "mihomo/vless-reality",
+    "passed": true,
+    "detail": "via vless-reality"
+  },
+  {
+    "case": "mihomo/hysteria2",
+    "passed": true,
+    "detail": "via hysteria2"
+  },
+  {
+    "case": "mihomo/tuic",
+    "passed": true,
+    "detail": "via tuic"
+  },
+  {
+    "case": "mihomo/anytls",
+    "passed": true,
+    "detail": "via anytls"
+  },
+  {
+    "case": "mihomo/all-options",
+    "passed": true,
+    "detail": "via ss"
+  },
+  {
+    "case": "mihomo/no-dns",
+    "passed": true,
+    "detail": "via ss"
+  },
+  {
+    "case": "mihomo/sub-base64",
+    "passed": true,
+    "detail": "via ss"
+  },
+  {
+    "case": "mihomo/sub-clash",
+    "passed": true,
+    "detail": "via trojan"
+  },
+  {
+    "case": "mihomo/sub-singbox",
+    "passed": false,
+    "detail": "mihomo rejects ntp.interval: 30m (string instead of integer)"
+  }
+]

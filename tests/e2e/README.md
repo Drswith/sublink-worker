@@ -52,3 +52,9 @@ Base64/Clash subscriptions.
 | `sing-box-*/sub-clash` | the Clash subscription's `dns` section is copied into the sing-box config (`dns.enable: unknown field`) |
 | `sing-box-*/sub-singbox` | non-standard `providers` fields on outbounds (1.12+); 1.12-style DNS servers on the 1.11 tier |
 | `mihomo/sub-singbox` | the subscription's sing-box-only sections (`ntp`, `inbounds`, `route`, `experimental`) are copied into the Clash config; mihomo rejects `ntp.interval: 30m` |
+
+## Xray interface scope
+
+`/xray` aggregates subscription text and emits Base64; it does not convert Clash YAML into Xray nodes. YAML remains encoded YAML in both the Node baseline and Rust implementation. This is an existing interface boundary, separate from the configuration failures above; the round-trip case does not establish real Xray client compatibility. No Xray behavior is changed by this documentation update.
+
+For the separate SG run with two real Hysteria2 single-node subscriptions and mihomo 1.19.32, see the [Clash validation report](../../docs/validation/2026-10-13-clash-sg.md). Other protocols in this suite use synthetic servers and inputs.

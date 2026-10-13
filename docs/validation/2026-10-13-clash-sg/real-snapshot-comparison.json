@@ -1,0 +1,74 @@
+[
+  {
+    "input": "standard",
+    "format": "clash",
+    "same_snapshot_exact_equal": true
+  },
+  {
+    "input": "standard",
+    "format": "singbox",
+    "same_snapshot_exact_equal": true
+  },
+  {
+    "input": "standard",
+    "format": "surge",
+    "same_snapshot_exact_equal": false,
+    "equal_without_managed_header": true
+  },
+  {
+    "input": "standard",
+    "format": "xray",
+    "same_snapshot_exact_equal": true,
+    "decoded_equal": true,
+    "decoded_sizes": [
+      167,
+      167
+    ],
+    "decoded_is_yaml": [
+      false,
+      false
+    ],
+    "decoded_schemes": [
+      [
+        "hysteria2"
+      ],
+      [
+        "hysteria2"
+      ]
+    ]
+  },
+  {
+    "input": "clash",
+    "format": "clash",
+    "same_snapshot_exact_equal": true
+  },
+  {
+    "input": "clash",
+    "format": "singbox",
+    "same_snapshot_exact_equal": true
+  },
+  {
+    "input": "clash",
+    "format": "surge",
+    "same_snapshot_exact_equal": false,
+    "equal_without_managed_header": true
+  },
+  {
+    "input": "clash",
+    "format": "xray",
+    "same_snapshot_exact_equal": true,
+    "decoded_equal": true,
+    "decoded_sizes": [
+      372,
+      372
+    ],
+    "decoded_is_yaml": [
+      true,
+      true
+    ],
+    "decoded_schemes": [
+      [],
+      []
+    ]
+  }
+]

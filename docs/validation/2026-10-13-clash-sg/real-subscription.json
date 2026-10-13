@@ -1,0 +1,351 @@
+{
+  "status": "completed",
+  "source": "SG dedicated server",
+  "sources": [
+    {
+      "input": "standard",
+      "fetch": [
+        {
+          "user_agent": "SublinkValidation/1.0",
+          "status": 200,
+          "bytes": 220,
+          "sha256": "dad491ce4d28af2c60660320f37f2c3dafb3c1f9f0ea787d9d25bec2d31cf16a",
+          "content_type": "text/plain; charset=utf-8"
+        },
+        {
+          "user_agent": "Clash.Meta",
+          "status": 200,
+          "bytes": 220,
+          "sha256": "dad491ce4d28af2c60660320f37f2c3dafb3c1f9f0ea787d9d25bec2d31cf16a",
+          "content_type": "text/plain; charset=utf-8"
+        },
+        {
+          "user_agent": "sing-box/1.14.2",
+          "status": 200,
+          "bytes": 220,
+          "sha256": "dad491ce4d28af2c60660320f37f2c3dafb3c1f9f0ea787d9d25bec2d31cf16a",
+          "content_type": "text/plain; charset=utf-8"
+        }
+      ],
+      "conversions": [
+        {
+          "format": "singbox",
+          "version": "1.11.15",
+          "rust_status": 200,
+          "node_status": 200,
+          "bytes": 3869,
+          "exact_equal": true,
+          "nodes": 1,
+          "protocols": [
+            "hysteria2"
+          ],
+          "client_check": {
+            "exit_code": 0,
+            "schema_errors": []
+          }
+        },
+        {
+          "format": "singbox",
+          "version": "1.12.25",
+          "rust_status": 200,
+          "node_status": 200,
+          "bytes": 3859,
+          "exact_equal": true,
+          "nodes": 1,
+          "protocols": [
+            "hysteria2"
+          ],
+          "client_check": {
+            "exit_code": 0,
+            "schema_errors": []
+          }
+        },
+        {
+          "format": "singbox",
+          "version": "1.13.21",
+          "rust_status": 200,
+          "node_status": 200,
+          "bytes": 3859,
+          "exact_equal": true,
+          "nodes": 1,
+          "protocols": [
+            "hysteria2"
+          ],
+          "client_check": {
+            "exit_code": 0,
+            "schema_errors": []
+          }
+        },
+        {
+          "format": "singbox",
+          "version": "1.14.2",
+          "rust_status": 200,
+          "node_status": 200,
+          "bytes": 3862,
+          "exact_equal": true,
+          "nodes": 1,
+          "protocols": [
+            "hysteria2"
+          ],
+          "client_check": {
+            "exit_code": 0,
+            "schema_errors": []
+          }
+        },
+        {
+          "format": "clash",
+          "version": null,
+          "rust_status": 200,
+          "node_status": 200,
+          "bytes": 4027,
+          "exact_equal": true,
+          "client_check": {
+            "exit_code": 0,
+            "schema_errors": []
+          },
+          "nodes": 1
+        },
+        {
+          "format": "surge",
+          "version": null,
+          "rust_status": 200,
+          "node_status": 200,
+          "bytes": 3083,
+          "exact_equal": false
+        },
+        {
+          "format": "xray",
+          "version": null,
+          "rust_status": 200,
+          "node_status": 200,
+          "bytes": 224,
+          "exact_equal": true
+        }
+      ]
+    },
+    {
+      "input": "clash",
+      "fetch": [
+        {
+          "user_agent": "SublinkValidation/1.0",
+          "status": 200,
+          "bytes": 373,
+          "sha256": "9a14a0e852aa53992a7b9ff6c675daf464a4374b4facbc45f0b0f210d882a775",
+          "content_type": "application/yaml; charset=utf-8"
+        },
+        {
+          "user_agent": "Clash.Meta",
+          "status": 200,
+          "bytes": 373,
+          "sha256": "9a14a0e852aa53992a7b9ff6c675daf464a4374b4facbc45f0b0f210d882a775",
+          "content_type": "application/yaml; charset=utf-8"
+        },
+        {
+          "user_agent": "sing-box/1.14.2",
+          "status": 200,
+          "bytes": 373,
+          "sha256": "97b604f38220157d43ca0bd8a6f4223faaf5321965f02f05b0ca78b506417bcd",
+          "content_type": "application/yaml; charset=utf-8"
+        }
+      ],
+      "conversions": [
+        {
+          "format": "singbox",
+          "version": "1.11.15",
+          "rust_status": 200,
+          "node_status": 200,
+          "bytes": 3993,
+          "exact_equal": true,
+          "nodes": 1,
+          "protocols": [
+            "hysteria2"
+          ],
+          "client_check": {
+            "exit_code": 0,
+            "schema_errors": []
+          }
+        },
+        {
+          "format": "singbox",
+          "version": "1.12.25",
+          "rust_status": 200,
+          "node_status": 200,
+          "bytes": 3962,
+          "exact_equal": true,
+          "nodes": 1,
+          "protocols": [
+            "hysteria2"
+          ],
+          "client_check": {
+            "exit_code": 0,
+            "schema_errors": []
+          }
+        },
+        {
+          "format": "singbox",
+          "version": "1.13.21",
+          "rust_status": 200,
+          "node_status": 200,
+          "bytes": 3962,
+          "exact_equal": true,
+          "nodes": 1,
+          "protocols": [
+            "hysteria2"
+          ],
+          "client_check": {
+            "exit_code": 0,
+            "schema_errors": []
+          }
+        },
+        {
+          "format": "singbox",
+          "version": "1.14.2",
+          "rust_status": 200,
+          "node_status": 200,
+          "bytes": 3965,
+          "exact_equal": true,
+          "nodes": 1,
+          "protocols": [
+            "hysteria2"
+          ],
+          "client_check": {
+            "exit_code": 0,
+            "schema_errors": []
+          }
+        },
+        {
+          "format": "clash",
+          "version": null,
+          "rust_status": 200,
+          "node_status": 200,
+          "bytes": 4068,
+          "exact_equal": true,
+          "client_check": {
+            "exit_code": 0,
+            "schema_errors": []
+          },
+          "nodes": 0
+        },
+        {
+          "format": "surge",
+          "version": null,
+          "rust_status": 200,
+          "node_status": 200,
+          "bytes": 3075,
+          "exact_equal": false
+        },
+        {
+          "format": "xray",
+          "version": null,
+          "rust_status": 200,
+          "node_status": 200,
+          "bytes": 496,
+          "exact_equal": false
+        }
+      ]
+    }
+  ],
+  "traffic": [
+    {
+      "input": "standard",
+      "client": "sing-box 1.11.15",
+      "node_index": 0,
+      "protocol": "hysteria2",
+      "client_started": true,
+      "curl_exit": 0,
+      "valid_trace": true,
+      "proxy_outbound_logged": true,
+      "egress_differs_from_sg": true
+    },
+    {
+      "input": "standard",
+      "client": "sing-box 1.12.25",
+      "node_index": 0,
+      "protocol": "hysteria2",
+      "client_started": true,
+      "curl_exit": 0,
+      "valid_trace": true,
+      "proxy_outbound_logged": true,
+      "egress_differs_from_sg": true
+    },
+    {
+      "input": "standard",
+      "client": "sing-box 1.13.21",
+      "node_index": 0,
+      "protocol": "hysteria2",
+      "client_started": true,
+      "curl_exit": 0,
+      "valid_trace": true,
+      "proxy_outbound_logged": true,
+      "egress_differs_from_sg": true
+    },
+    {
+      "input": "standard",
+      "client": "sing-box 1.14.2",
+      "node_index": 0,
+      "protocol": "hysteria2",
+      "client_started": true,
+      "curl_exit": 0,
+      "valid_trace": true,
+      "proxy_outbound_logged": true,
+      "egress_differs_from_sg": true
+    },
+    {
+      "input": "standard",
+      "client": "mihomo 1.19.32",
+      "node_index": 0,
+      "protocol": "Hysteria2",
+      "curl_exit": 0,
+      "valid_trace": true,
+      "selected_node_logged": false,
+      "egress_differs_from_sg": true
+    },
+    {
+      "input": "clash",
+      "client": "sing-box 1.11.15",
+      "node_index": 0,
+      "protocol": "hysteria2",
+      "client_started": true,
+      "curl_exit": 0,
+      "valid_trace": true,
+      "proxy_outbound_logged": true,
+      "egress_differs_from_sg": true
+    },
+    {
+      "input": "clash",
+      "client": "sing-box 1.12.25",
+      "node_index": 0,
+      "protocol": "hysteria2",
+      "client_started": true,
+      "curl_exit": 0,
+      "valid_trace": true,
+      "proxy_outbound_logged": true,
+      "egress_differs_from_sg": true
+    },
+    {
+      "input": "clash",
+      "client": "sing-box 1.13.21",
+      "node_index": 0,
+      "protocol": "hysteria2",
+      "client_started": true,
+      "curl_exit": 0,
+      "valid_trace": true,
+      "proxy_outbound_logged": true,
+      "egress_differs_from_sg": true
+    },
+    {
+      "input": "clash",
+      "client": "sing-box 1.14.2",
+      "node_index": 0,
+      "protocol": "hysteria2",
+      "client_started": true,
+      "curl_exit": 0,
+      "valid_trace": true,
+      "proxy_outbound_logged": true,
+      "egress_differs_from_sg": true
+    }
+  ],
+  "direct_target": {
+    "status": 200
+  }
+}
